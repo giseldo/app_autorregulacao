@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Enviar dica de autorregulação para os alunos automatizadas")
+st.title("Enviar dica de autorregulação para os alunos automatizadas em lote")
 
 
 df = pd.read_csv("datasets/questionario.csv", index_col=0, dtype={"nome": "string"})
@@ -18,4 +18,4 @@ Você encontra alguma característica dos três tópicos mais interessantes nos 
 Se você conseguir identificar o quê, nos três tópicos mais interessantes, faz com que você goste deles, talvez você seja capaz de aplicar o que encontrou aos três menos interessantes.
 E talvez você descubra que os tópicos desinteressantes não são tão desinteressantes assim!""")
 
-st.button("Enviar dica.")
+st.button("Enviar", key="btnenviardicaautomatizadaemlote")

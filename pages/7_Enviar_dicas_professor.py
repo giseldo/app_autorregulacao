@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Enviar dica para os alunos")
+st.title("Enviar dica para os alunos personalizada pelo professor em lote")
 
 df = pd.read_csv("datasets/questionario.csv", index_col=0, dtype={"nome": "string"})
 st.session_state["data"] = df
