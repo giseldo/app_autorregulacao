@@ -11,7 +11,7 @@ df = st.session_state["data"]
 
 alunos = df["nome"]
 
-aluno_selecionado = st.sidebar.selectbox("Aluno", alunos)
+aluno_selecionado = st.selectbox("Aluno", alunos)
 
 dados_aluno_selecionado = df[df["nome"] == aluno_selecionado].iloc[0]
 st.title(dados_aluno_selecionado["nome"])
