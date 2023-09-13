@@ -1,3 +1,4 @@
+streamlit
 matplotlib
 pandas
 google-auth==2.3.3
