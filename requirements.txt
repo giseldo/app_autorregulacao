@@ -2,3 +2,4 @@ matplotlib
 google-auth
 google-api-python-client
 oauth2client
+streamlit_google_oauth
