@@ -1,10 +1,8 @@
 import streamlit as st
-from googleapiclient import discovery
-from httplib2 import Http
-from oauth2client import file, client, tools
-import pandas as pd
+from googleapiclient.discovery import build
 import numpy as np
 import matplotlib.pyplot as plt
+from google.oauth2.credentials import Credentials 
 
 st.title("Dados do aluno")
 
@@ -147,8 +145,7 @@ with analise:
         col13.metric("Administração de esforços: ", administracao_de_esforcos)
     else:
         st.write("Aluno ainda não respondeu ao questionário.")
-        
-        
+             
 with grafico:
     st.write("Dados do questionário de autorregulação")
     df_quest_reg = st.session_state["df_respostas"]
@@ -176,8 +173,6 @@ with grafico:
         st.pyplot(plt)
     else:
         st.write("Aluno ainda não respondeu ao questionário.")
-    
-    
 
 with dicas_do_professor:
     st.write("Enviar uma recomendação personalizada para este aluno")
@@ -186,28 +181,9 @@ with dicas_do_professor:
     btn_enviar_dica_professor = st.button("Enviar", key ="btndicaprofessor")
 
 def enviar_dica_professor(student_id, titulo, descricao):
-    SCOPES = [  'https://www.googleapis.com/auth/classroom.courses', 
-                'https://www.googleapis.com/auth/drive.readonly.metadata', 
-                'https://www.googleapis.com/auth/classroom.announcements',	
-                'https://www.googleapis.com/auth/classroom.courses',
-                'https://www.googleapis.com/auth/classroom.coursework.me',
-                'https://www.googleapis.com/auth/classroom.coursework.students',
-                'https://www.googleapis.com/auth/classroom.courseworkmaterials',
-                'https://www.googleapis.com/auth/classroom.guardianlinks.students',
-                'https://www.googleapis.com/auth/classroom.profile.emails',	
-                'https://www.googleapis.com/auth/classroom.profile.photos',	
-                'https://www.googleapis.com/auth/classroom.push-notifications',	
-                'https://www.googleapis.com/auth/classroom.rosters',	
-                'https://www.googleapis.com/auth/classroom.rosters.readonly',	
-                'https://www.googleapis.com/auth/classroom.topics'] 
-
-    store = file.Storage('storage.json')
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('client_id.json', SCOPES)
-        creds = tools.run_flow(flow, store)
-    classroom = discovery.build('classroom', 'v1', http=creds.authorize(Http()))
-    
+    token = st.session_state['token']
+    classroom = build('classroom', 'v1', credentials=Credentials(token=token.get("access_token")))
+        
     dica = {
             'title': titulo,
             'description': descricao,

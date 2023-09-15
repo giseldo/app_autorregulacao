@@ -4,9 +4,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 token = st.session_state['token']
-access_token = token.get("access_token")
-creds = Credentials(token=access_token)
-classroom = build('classroom', 'v1', credentials=creds)
+classroom = build('classroom', 'v1', credentials=Credentials(token=token.get("access_token")))
 
 id_curso_selecionado = st.session_state["id_curso_selecionado"]
 
