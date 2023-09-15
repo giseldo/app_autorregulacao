@@ -8,3 +8,4 @@ protobuf
 httpx-oauth
 python-dotenv
 typing_extensions
+streamlit_oauth
