@@ -1,13 +1,13 @@
 {
-    "installed": {
-        "client_id": "80547735486-qlqurma8i51tkdr8aqp5lncb25in1snd.apps.googleusercontent.com",
+    "web": {
+        "client_id": "80547735486-v27sr7scvtldgdagtj5gpf8ke2bquoph.apps.googleusercontent.com",
         "project_id": "alanaautorregulationplataform",
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": "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",
+        "client_secret": "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",
         "redirect_uris": [
-            "http://autorregulacao.streamlit.app"
+            "http://localhost:8501/"
         ]
     }
 }

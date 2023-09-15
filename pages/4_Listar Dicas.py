@@ -3,10 +3,5 @@ import pandas as pd
 
 st.title("Listar as dicas automáticas")
 
-df_dicas = pd.read_csv("datasets/dicas.csv")
-
-st.session_state["df_dicas"] = df_dicas
+df_dicas = pd.read_csv("datasets/dicas.csv", names=["ID", "Tipo", "Título", "Constructo", "Dicas"], header=0 , usecols=["Tipo", "Título", "Constructo", "Dicas"])
 df_dicas
-
-#st.data_editor(df_dicas, num_rows="dynamic")
-

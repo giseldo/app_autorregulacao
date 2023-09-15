@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-st.title("Listar perguntas do Questionário MSLQ")
+st.title("Listar perguntas do questionário MSLQ")
 
-df_mslq = pd.read_csv("datasets/mslq.csv")
+df_mslq = pd.read_csv("datasets/mslq.csv", names=["id_questao","Tipo","Constructo","Questão"], header=0 , usecols=["Tipo","Constructo","Questão"])
 df_mslq
