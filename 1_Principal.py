@@ -21,10 +21,28 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/classroom.courses
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 
+st.title("SENTMonitor - Uma ferramenta para auxiliar o professor e o estudante.")
+st.markdown("""
+             Dicas automáticas são geradas para o perfil de acordo com o perfil de autorregulação/bigfive do estudante!
+             
+             Esse AVA é intregrado com o Sala de Aula e apresenta o perfil de autorregulação e bigfive dos estudantes!
+             
+             O momento de envio das dicas fica a cargo do professor!
+             
+             Desenvolvido como uma prova de conceito para a proposta de doutorado de Alana Viana Borges Neo!
+             
+             Dúvidas envie email para: viana.alana@gmail.com
+             
+             Todos os direitors reservados
+            """)
+
+
+
+st.warning("Esse aplicativo puxa informações(cursos, alunos) do Google Sala de aula associado a sua conta de email. Portanto é preciso efetuar login com a sua conta do google que deseja utilizar.")
 # Check if token exists in session state
 if 'token' not in st.session_state:
     # If not, show authorize button
-    result = oauth2.authorize_button("Authorize", REDIRECT_URI, SCOPES)
+    result = oauth2.authorize_button("Login", REDIRECT_URI, SCOPES)
     
     if result and 'token' in result:
         # If authorization successful, save token in session state
@@ -36,19 +54,22 @@ else:
     #st.json(token)
     access_token = token.get("access_token")
         
-    st.title("Gerenciador de autorregulação.")
-    st.write("Desenvolvido como uma prova de conceito para a proposta de doutorado de Alana Viana Borges Neo!")
-    st.write("viana.alana@gmail.com")
-    st.write("Aguarde carregando dados.")
+    st.warning("Aguarde carregar todos os dados antes de continuar.")
+    
+   
 
-    # carregar as respostas dos estudantes
+    # carregar as respostas de autorregulação
     df_respostas = pd.read_csv("datasets/resposta_questionario_regulacao.csv")
     st.session_state["df_respostas"] = df_respostas
+    
+    # carregar questoes do big five    
+    df_respostas_big_five = pd.read_csv("datasets/resposta_bigfive.csv")
+    st.session_state["df_respostas_big_five"] = df_respostas_big_five  
 
     # carregar as questoes do mslq
     df_questoes_mslq = pd.read_csv("datasets/mslq.csv")
     st.session_state["df_questoes_mslq"] = df_questoes_mslq
-
+    
     # carregar as dicas
     df_dicas = pd.read_csv("datasets/dicas.csv")
     st.session_state["df_dicas"] = df_dicas
@@ -66,9 +87,7 @@ else:
     df_cursos = pd.DataFrame(lista_curso, columns=["nome", "id"])    
     st.session_state["df_cursos"] = df_cursos
 
-    st.write("Selecione um curso do sala de aula para continuar")
-
-    curso_selecionado = st.selectbox(label="Selecione o curso:", options=df_cursos["nome"])
+    curso_selecionado = st.selectbox(label="Selecione um curso do sala de aula para continuar:", options=df_cursos["nome"])
 
     btn_carregar_curso = st.button("Carregar", key="btncarregarcurso")
 
@@ -84,7 +103,7 @@ else:
             lista_estudante.append([estudante['userId'], estudante["profile"]["name"]["fullName"], estudante["profile"]["emailAddress"]])
         df_estudantes = pd.DataFrame(lista_estudante, columns=["userId", "nome", "email"])    
         st.session_state["df_estudantes"] = df_estudantes
-        st.write("Todos os estudantes carregados!")
+        st.success("Todos os estudantes carregados!")
         
     if btn_carregar_curso:
         st.write("Curso Selecionado: ", curso_selecionado)
@@ -93,4 +112,4 @@ else:
         st.write("ID do curso selecionado: ", id_curso_selecionado)
         st.session_state["id_curso_selecionado"] = id_curso_selecionado
         carregar_alunos(id_curso_selecionado)
-        st.write("Todos os dados carregados!")
+        st.success("Todos os dados carregados!")

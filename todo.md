@@ -1,4 +1,4 @@
 # Arquivo TODO
-## dados mslq = igual sendo uma tabela
-## enviar dica para o aluno
-## exibir as atividades do classrrom
+
+## Enviar dica para o aluno
+## Exibir as atividades do classrrom
