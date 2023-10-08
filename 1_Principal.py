@@ -21,7 +21,7 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/classroom.courses
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 
-st.title("NEOMonitor - Um AVA para auxiliar o professor e o estudante. (v1.2)")
+st.title("NEOMonitor - Um AVA para auxiliar o professor e o estudante. (v1.3)")
 st.markdown("""
              Esse AVA é intregrado com o Sala de Aula e apresenta o perfil de autorregulação e bigfive dos estudantes! Dicas automáticas são geradas para o perfil de acordo com o perfil de autorregulação/bigfive do estudante!
              O momento de envio das dicas fica a cargo do professor!

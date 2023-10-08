@@ -1,19 +1,22 @@
 import streamlit as st
-
-st.title("Dashboard da turma")
-
-st.markdown('### Métricas da turma')
-col1, col2, col3 = st.columns(3)
-
-df_estudantes = st.session_state["df_estudantes"]
-
-col1.metric("Total de Alunos", len(df_estudantes))
-
 import numpy as np
 import matplotlib.pyplot as plt
 
-category_names = ['Discodo totalmente', 'Discordo',
-                  'indiferente', 'Concordo', 'Concordo totalmente']
+st.title("Dashboard da turma")
+
+if "df_estudantes" not in st.session_state:
+    st.error("Volte para a tela principal faça login e carregue uma turma!")
+else:
+
+    st.markdown('### Métricas da turma')
+    col1, col2, col3 = st.columns(3)
+
+    df_estudantes = st.session_state["df_estudantes"]
+
+    col1.metric("Total de Alunos", len(df_estudantes))
+
+    category_names = ['Discodo totalmente', 'Discordo',
+                    'indiferente', 'Concordo', 'Concordo totalmente']
 # results = {
 #     'Extroversão': [1, 0, 0, 0, 1],
 #     'Amababilidade': [1, 0, 0, 0, 1],
