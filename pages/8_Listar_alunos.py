@@ -15,7 +15,6 @@ else:
 
     id_curso_selecionado = st.session_state["id_curso_selecionado"]
 
-
     st.write(f"Curso selecionado: {id_curso_selecionado}")
 
     # carrregar estudantes daquele curso

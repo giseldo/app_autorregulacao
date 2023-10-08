@@ -437,11 +437,17 @@ else:
             else:
                 st.warning("Aluno ainda não respondeu ao questionário.")
     with dicas:
-        dicas_automaticas, dicas_do_professor = st.tabs(["Recomendação automatica autorregulação", "Recomendação personalizada"])
+        dicas_do_professor, dicas_automaticas  = st.tabs(["Recomendação personalizada", "Recomendação automática"])
         with dicas_do_professor:
             st.success("Enviar uma recomendação personalizada para este aluno")
-            txt_titulo_dica_prof = st.text_input("Título", key="txt_titulo_dica_prof")
-            txt_desc_dica_prof = st.text_area("Descrição", key="txt_desc_dica_prof")
+            txt_titulo_dica_prof = st.text_input(label="Título", key="txt_titulo_dica_prof", value="Recomendação individual para {}".format(nome_estudante_selecionado))
+            txt_desc_dica_prof = st.text_area(height=180,
+                                              label="Descrição", key="txt_desc_dica_prof", value="""Prezado {}, percebemos que o seu desempenho foi satisfatório
+para o tópico <nome do tópico>, contido no assunto <nome do assunto>, cujo valor de
+rendimento foi igual a <coeficiente desempenho>, mas vimos que você não interagiu com
+todos os recursos, sugerimos que interaja com os recursos <recursos não utilizados> para que
+possa finalizar o módulo com aproveitamento apropriado, pois seu rendimento de interação
+é <coeficiente interação>, abaixo do esperado que é 60%""".format(nome_estudante_selecionado))
             btn_enviar_dica_professor = st.button("Enviar", key ="btndicaprofessor")
 
         def enviar_dica_professor(student_id, titulo, descricao):
@@ -461,11 +467,11 @@ else:
             enviar_dica_professor(id_estudante_selecionado, txt_titulo_dica_prof, txt_desc_dica_prof)
             
         with dicas_automaticas:
-            st.success("Recomendações automáticas identenficadas pela análise do perfil de autorregulação")
+            st.success("Recomendações automáticas identificadas pela análise do perfil de autorregulação")
             
             df_quest_reg = st.session_state["df_respostas"]
             if len (df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                btn_enviar_dica_automaticas = st.button("Enviar todas", key ="btndicaautomatica")
+                
                 dfreg = df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado].iloc[0]
                 
                 media_orientacao_metas_intrinsecas = np.mean([dfreg.iloc[2], dfreg.iloc[3]])
@@ -483,65 +489,76 @@ else:
                 administracao_de_esforcos = np.mean([dfreg.iloc[41], dfreg.iloc[42], dfreg.iloc[43], dfreg.iloc[44], dfreg.iloc[45]]) 
                 
                 df_dicas = st.session_state["df_dicas"]
-                st.divider()
-                
+                option = st.selectbox(
+                            'Tipo Tarefa',
+                            ('Simulado', 'Participação em Fórum'))
+                st.divider()            
                 if (media_orientacao_metas_intrinsecas <= limite) or (media_orientacao_metas_extrinsicas <= limite) or (media_valorizacao_da_atividade <= limite) or (controle_do_aprendizado <= limite):
-                    st.write("Motivo: baixa capacidade de Orientação à metas intrínsecas")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixa capacidade de Orientação à metas intrínsecas")
+                    st.text_input(key="rec1", value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título" )
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[0]).split(" / "):
                         st.success(l)
                     st.divider()
                 if autoeficacia_para_aprendizado <= limite:
-                    st.write("Motivo: baixa capacidade de autoeficácia no aprendizado")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixa capacidade de autoeficácia no aprendizado")
+                    st.text_input(key="rec2",value="Recomendação individual para {}".format(nome_estudante_selecionado),  label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[1]).split(" / "):
                         st.success(l)
                     st.divider()
                 if ansiedade_em_testes <= limite:
-                    st.markdown("Motivo: baixa ansiedade em testes")
-                    st.write("Dica:")
+                    st.markdown("### Motivo: baixa ansiedade em testes")
+                    st.text_input(key="rec3",value="Recomendação individual para {}".format(nome_estudante_selecionado),  label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[2]).split(" / "):
                         st.success(l)
                     st.divider()
                 if ensaio_memorizacao <= limite:
-                    st.write("Motivo: baixa memorização")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixa memorização")
+                    st.text_input(key="rec4",value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[3]).split(" / "):
                         st.success(l)
                     st.divider()
                 if elaboracao <= limite:
-                    st.write("Motivo: baixa elaboração")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixa elaboração")
+                    st.text_input(key="rec5",value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[4]).split(" / "):
                         st.success(l)
                     st.divider()
                 if organizacao <= limite:
-                    st.write("Motivo: baixa organização")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixa organização")
+                    st.text_input(key="rec6",value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[5]).split(" / "):
                         st.success(l)
                     st.divider()
                 #if pensamento_critico <= 3:
                 #    st.write(df_dicas["dicas"].iloc[2])
                 if autorregulacao_metacognitiva <= limite:
-                    st.write("Motivo: baixa autorregulação metacognitiva")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixa autorregulação metacognitiva")
+                    st.text_input(key="rec7",value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[6]).split(" / "):
                         st.success(l)
                     st.divider()
                 if tempo_e_ambiente_de_estudo <= limite:
-                    st.write("Motivo: baixo tempo e ambiente de estudo")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixo tempo e ambiente de estudo")
+                    st.text_input(key="rec8",value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[7]).split(" / "):
                         st.success(l)
                     st.divider()
                 if administracao_de_esforcos <= limite:
-                    st.write("Motivo: baixo administração de esforços")
-                    st.write("Dica:")
+                    st.write("### Motivo: baixo administração de esforços")
+                    st.text_input(key="rec9",value="Recomendação individual para {}".format(nome_estudante_selecionado), label="Título")
+                    st.write("Descrição")
                     for l in str(df_dicas["dicas"].iloc[8]).split(" / "):
                         st.success(l)
                     st.divider()
-                
+                btn_enviar_dica_automaticas = st.button("Enviar todas", key ="btndicaautomatica")
                 if btn_enviar_dica_automaticas:
                     if media_orientacao_metas_intrinsecas <= 4 or media_orientacao_metas_extrinsicas <= 3 or media_valorizacao_da_atividade <= 3 or controle_do_aprendizado <= 3:
                         enviar_dica_professor(id_estudante_selecionado, "Dica: " + df_dicas["constructo"].iloc[0], df_dicas["dicas"].iloc[0])
