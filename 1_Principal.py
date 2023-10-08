@@ -21,24 +21,15 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/classroom.courses
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 
-st.title("SENTMonitor - Uma ferramenta para auxiliar o professor e o estudante.")
+st.title("NEOMonitor - Um AVA para auxiliar o professor e o estudante.")
 st.markdown("""
-             Dicas automáticas são geradas para o perfil de acordo com o perfil de autorregulação/bigfive do estudante!
-             
-             Esse AVA é intregrado com o Sala de Aula e apresenta o perfil de autorregulação e bigfive dos estudantes!
-             
+             Esse AVA é intregrado com o Sala de Aula e apresenta o perfil de autorregulação e bigfive dos estudantes! Dicas automáticas são geradas para o perfil de acordo com o perfil de autorregulação/bigfive do estudante!
              O momento de envio das dicas fica a cargo do professor!
-             
-             Desenvolvido como uma prova de conceito para a proposta de doutorado de Alana Viana Borges Neo!
-             
-             Dúvidas envie email para: viana.alana@gmail.com
-             
-             Todos os direitors reservados
+             Doutorado de Alana Viana Borges Neo (email: viana.alana@gmail.com)
+             @ Todos os direitos reservados.
             """)
 
-
-
-st.warning("Esse aplicativo puxa informações(cursos, alunos) do Google Sala de aula associado a sua conta de email. Portanto é preciso efetuar login com a sua conta do google que deseja utilizar.")
+st.warning("Esse aplicativo é integrado com o Google Sala de aula associado a sua conta de email. Portanto é preciso efetuar login com a sua conta do google que deseja utilizar.")
 # Check if token exists in session state
 if 'token' not in st.session_state:
     # If not, show authorize button
@@ -57,7 +48,6 @@ else:
     st.warning("Aguarde carregar todos os dados antes de continuar.")
     
    
-
     # carregar as respostas de autorregulação
     df_respostas = pd.read_csv("datasets/resposta_questionario_regulacao.csv")
     st.session_state["df_respostas"] = df_respostas
@@ -103,6 +93,9 @@ else:
             lista_estudante.append([estudante['userId'], estudante["profile"]["name"]["fullName"], estudante["profile"]["emailAddress"]])
         df_estudantes = pd.DataFrame(lista_estudante, columns=["userId", "nome", "email"])    
         st.session_state["df_estudantes"] = df_estudantes
+        
+        st.session_state["limite"] = 4
+        
         st.success("Todos os estudantes carregados!")
         
     if btn_carregar_curso:
@@ -112,4 +105,5 @@ else:
         st.write("ID do curso selecionado: ", id_curso_selecionado)
         st.session_state["id_curso_selecionado"] = id_curso_selecionado
         carregar_alunos(id_curso_selecionado)
+        
         st.success("Todos os dados carregados!")
