@@ -19,7 +19,7 @@ else:
     st.write("Questionário de autorregulação X.0 - [link](https://docs.google.com/forms/d/e/1FAIpQLSeCw4dC2bJnr69qf2HkvOpFAAumkYq1hHvmYAO-N0CMERYyKg/viewform)")
 
     valor = st.session_state["limite"]
-    limite = st.slider('Qual o limite da autorregulação?', 0, 7, valor)
+    limite = st.slider('Qual o limite da Autorregulação?', 0, 7, valor)
     st.session_state["limite"] = limite
 
     valor_big = st.session_state["limite_bigfive"]

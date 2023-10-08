@@ -67,6 +67,8 @@ else:
     service = build('classroom', 'v1', credentials=creds)
     
     st.session_state["limite"] = 4
+    st.session_state["limite_bigfive"] = 3
+    
 
     # carrregar curso
     results = service.courses().list(pageSize=10).execute()
