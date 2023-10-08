@@ -22,7 +22,3 @@ else:
     limite = st.slider('Qual o limite da Autorregulação?', 0, 7, valor)
     st.session_state["limite"] = limite
 
-    valor_big = st.session_state["limite_bigfive"]
-    limite = st.slider('Qual o limite do BigFive?', 0, 5, valor_big)
-    st.session_state["limite_bigfive"] = valor_big
-
