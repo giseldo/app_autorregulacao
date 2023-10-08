@@ -21,7 +21,7 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/classroom.courses
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 
-st.title("NEOMonitor - Um AVA para auxiliar o professor e o estudante.")
+st.title("NEOMonitor - Um AVA para auxiliar o professor e o estudante. (v1.2)")
 st.markdown("""
              Esse AVA é intregrado com o Sala de Aula e apresenta o perfil de autorregulação e bigfive dos estudantes! Dicas automáticas são geradas para o perfil de acordo com o perfil de autorregulação/bigfive do estudante!
              O momento de envio das dicas fica a cargo do professor!
@@ -45,15 +45,14 @@ else:
     #st.json(token)
     access_token = token.get("access_token")
         
-    st.warning("Aguarde carregar todos os dados antes de continuar.")
+    st.warning("Aguarde carregar TODOS os dados antes de continuar.")
     
-   
     # carregar as respostas de autorregulação
-    df_respostas = pd.read_csv("datasets/resposta_questionario_regulacao.csv")
+    df_respostas = pd.read_csv("datasets/resposta_autorregulacao_v2.csv")
     st.session_state["df_respostas"] = df_respostas
     
     # carregar questoes do big five    
-    df_respostas_big_five = pd.read_csv("datasets/resposta_bigfive.csv")
+    df_respostas_big_five = pd.read_csv("datasets/resposta_bigfive_v2.csv")
     st.session_state["df_respostas_big_five"] = df_respostas_big_five  
 
     # carregar as questoes do mslq
@@ -66,6 +65,8 @@ else:
     
     creds = Credentials(token=access_token)
     service = build('classroom', 'v1', credentials=creds)
+    
+    st.session_state["limite"] = 4
 
     # carrregar curso
     results = service.courses().list(pageSize=10).execute()
@@ -93,8 +94,6 @@ else:
             lista_estudante.append([estudante['userId'], estudante["profile"]["name"]["fullName"], estudante["profile"]["emailAddress"]])
         df_estudantes = pd.DataFrame(lista_estudante, columns=["userId", "nome", "email"])    
         st.session_state["df_estudantes"] = df_estudantes
-        
-        st.session_state["limite"] = 4
         
         st.success("Todos os estudantes carregados!")
         

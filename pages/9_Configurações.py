@@ -1,7 +1,4 @@
 import streamlit as st
-import webbrowser
-
-
 
 st.title("Configurações")
 # Bigfive
@@ -19,7 +16,7 @@ st.write("Questionário de autorregulação X.0 - [link](https://docs.google.com
 
 valor = st.session_state["limite"]
 
-limite = st.slider('Qual o limite da autorregualção?', 0, 7, valor)
+limite = st.slider('Qual o limite da autorregulqWção?', 0, 7, valor)
 
 st.session_state["limite"] = limite
 
