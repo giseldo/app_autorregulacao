@@ -21,7 +21,7 @@ else:
     email_estudante_selecionado = df_estudante_selecionado["email"]
     #st.write(email_estudante_selecionado)
     #st.warning("O Aluno solicitou ajuda!!")
-    autorregulacao, bigfive,dicas = st.tabs(["Autorregulação", "Bigfive", "Dicas"])
+    autorregulacao, bigfive,dicas = st.tabs(["Autorregulação", "Bigfive", "Recomendação"])
         
     with bigfive:
         analise_big_five, grafico_big_five, dados_big_five = st.tabs(["Análise", "Gráfico", "Dados"])
@@ -65,18 +65,66 @@ else:
                 col1, col2, col3 = st.columns(3)
                 col4, col5, col6 = st.columns(3)
                 
-                def get_slider_name(v):
+                def get_slider_name_extroversao(v):
                     if v == 5:
-                        return 'Totalmente Introvertido'
+                        return 'Extrovertido'
                     elif v == 4:
-                        return 'Parcialmente Introvertido'
+                        return 'Parcialmente Extrovertido'
                     elif v == 3:
                         return 'Neutro'
                     elif v == 2:
-                        return 'Parcialmente Extrovertido'
+                        return 'Parcialmente Introvertido'
                     elif v == 1:
-                        return 'Totalmente Extrovertido'
-                
+                        return 'Introvertido'
+                    
+                def get_slider_name_conscienciosidade(v):
+                    if v == 5:
+                        return 'Consciencioso'
+                    elif v == 4:
+                        return 'Parcialmente Consciencioso'
+                    elif v == 3:
+                        return 'Neutro'
+                    elif v == 2:
+                        return 'Parcialmente Desorganizado'
+                    elif v == 1:
+                        return 'Desorganizado'
+                    
+                def get_slider_name_abertura_experiencias(v):
+                    if v == 5:
+                        return 'Aberto a Exper.'
+                    elif v == 4:
+                        return 'Parcialmente Aberto a Exper.'
+                    elif v == 3:
+                        return 'Neutro'
+                    elif v == 2:
+                        return 'Parcialmente Convencional'
+                    elif v == 1:
+                        return 'Convencional' 
+                    
+                def get_slider_name_amabilidade(v):
+                    if v == 5:
+                        return 'Amáveis'
+                    elif v == 4:
+                        return 'Parcialmente Amáveis'
+                    elif v == 3:
+                        return 'Neutro'
+                    elif v == 2:
+                        return 'Parcialmente Antagonista'
+                    elif v == 1:
+                        return 'Antagonista'
+                    
+                def get_slider_name_estabilidade_emocional(v):
+                    if v == 5:
+                        return 'Estável Emoc.'
+                    elif v == 4:
+                        return 'Parcialmente Estável Emoc.'
+                    elif v == 3:
+                        return 'Neutro'
+                    elif v == 2:
+                        return 'Parcialmente Instável Emoc.'
+                    elif v == 1:
+                        return 'Instável Emoc.'
+                    
                 st.write("### Extroversão")                
                 col1b, col2b = st.columns(2)
                 with col1b:
@@ -90,22 +138,21 @@ else:
 * Liderança aumentada
 * Maior satisfação na vida e no trabalho""")
                 st.select_slider(
-                        label="",
+                        label="Extroversao",
                         key="sextroversao",
-                        options=['Extrovertido', 'Parcialmente Extrovertido', 'Neutro', 'Parcialmente Introvertido', 'Introvertido'],
-                        value=(get_slider_name(round(extroversao)),get_slider_name(round(extroversao))),
+                        options=['Introvertido', 'Parcialmente Introvertido', 'Neutro', 'Parcialmente Extrovertido', 'Extrovertido'],
+                        value=(get_slider_name_extroversao(round(extroversao)),get_slider_name_extroversao(round(extroversao))),
                         #disabled=True, 
                         label_visibility ="hidden"
                 )
                 col1b, col2b = st.columns(2)
                 with col1b:
-                    st.write("Extrovertido = (agregador, assertivo, sociável, falador, expansivo)")
-                with col2b:    
                     st.write("Introvertido = (reservado, tímido, quieto, sóbrio)")
+                with col2b:    
+                    st.write("Extrovertido = (agregador, assertivo, sociável, falador, expansivo)")    
                 st.divider()
                 
-                
-                st.write("### Amababilidade")
+                st.write("### Amababilidade / Socialização")
                 col1b, col2b = st.columns(2)
                 with col1b:
                     st.write("""Porque é importante? 
@@ -117,22 +164,21 @@ else:
 * Níveis menores de desvios de comportamento no trabalho
 """)
                 st.select_slider(
-                        label="",
+                        label="Ambabilidade",
                         key="samababilidade",
-                        options=['Extrovertido', 'Parcialmente Extrovertido', 'Neutro', 'Parcialmente Introvertido', 'Introvertido'],
-                        value=(get_slider_name(round(amababilidade)),get_slider_name(round(amababilidade))),
+                        options=['Antagonista', 'Parcialmente Antagonista', 'Neutro', 'Parcialmente Amáveis', 'Amáveis'],
+                        value=(get_slider_name_amabilidade(round(amababilidade)),get_slider_name_amabilidade(round(amababilidade))),
                         #disabled=True, 
                         label_visibility ="hidden"
                 )
                 col1b, col2b = st.columns(2)
                 with col1b:
-                    st.write("Amáveis = (cooperativo, receptivo, confiável, solidário,  gentil, grato)")
-                with col2b:
                     st.write("Antagonista = (frio, desagradável, confrontador, crítico, frio, inamistoso)")
+                with col2b:
+                    st.write("Amáveis = (cooperativo, receptivo, confiável, solidário,  gentil, grato)")
                 st.divider()
                 
-                
-                st.write("### Conscienciosidade")
+                st.write("### Conscienciosidade / Realização")
                 col1b, col2b = st.columns(2)
                 with col1b:
                     st.write("""Porque é importante? 
@@ -146,22 +192,21 @@ else:
 * Maior longevidade
 """)
                 st.select_slider(
-                        label="",
+                        label="Conscienciosidade",
                         key="sconscienciosidade",
-                        options=['Extrovertido', 'Parcialmente Extrovertido', 'Neutro', 'Parcialmente Introvertido', 'Introvertido'],
-                        value=(get_slider_name(round(conscienciosidade)),get_slider_name(round(conscienciosidade))),
+                        options=['Desorganizado', 'Parcialmente Desorganizado', 'Neutro', 'Parcialmente Consciencioso', 'Consciencioso'],
+                        value=(get_slider_name_conscienciosidade(round(conscienciosidade)),get_slider_name_conscienciosidade(round(conscienciosidade))),
                         #disabled=True, 
                         label_visibility ="hidden"
                 )
                 col1b, col2b = st.columns(2)
                 with col1b:
-                    st.write("Consciencioso = (responsável, organizado, confiável, persistente, cuidadoso, disciplinado)")
-                with col2b:
                     st.write("Desorganizado = (distraído, desorganizado, pouco confiável, descuidado, impulsivo)")
+                with col2b:
+                    st.write("Consciencioso = (responsável, organizado, confiável, persistente, cuidadoso, disciplinado)")
                 st.divider()
                 
-                
-                st.write("### Estabilidade Emocional")
+                st.write("### Estabilidade Emocional (Neuroticismo)")
                 col1b, col2b = st.columns(2)
                 with col1b:
                     st.write("""Porque é importante? 
@@ -173,22 +218,21 @@ else:
 * Menores níveis de estresse
 """)
                 st.select_slider(
-                        label="",
+                        label="Estabilidade Emocional",
                         key="sestabilidade_emocional",
-                        options=['Extrovertido', 'Parcialmente Extrovertido', 'Neutro', 'Parcialmente Introvertido', 'Introvertido'],
-                        value=(get_slider_name(round(estabilidade_emocional)),get_slider_name(round(estabilidade_emocional))),
+                        options=['Instável Emoc.', 'Parcialmente Instável Emoc.', 'Neutro', 'Parcialmente Estável Emoc.', 'Estável Emoc.'],
+                        value=(get_slider_name_estabilidade_emocional(round(estabilidade_emocional)), get_slider_name_estabilidade_emocional(round(estabilidade_emocional))),
                         #disabled=True, 
                         label_visibility ="hidden"
                 )
                 col1b, col2b = st.columns(2)
                 with col1b:
-                    st.write("Estável emoc. = (calmo, autoconfiante, seguro, estável)")
+                    st.write("Instável Emoc. = (nervoso, ansioso, deprimido, inseguro, tenso)")
                 with col2b:
-                    st.write("Instável emoc. = (nervoso, ansioso, deprimido, inseguro, tenso)")
+                    st.write("Estável Emoc. = (calmo, autoconfiante, seguro, estável)")
                 st.divider()  
                 
-                
-                st.write("### Abertura a experiencias")
+                st.write("### Abertura a experiências")
                 col1b, col2b = st.columns(2)
                 with col1b:
                     st.write("""Porque é importante? 
@@ -202,20 +246,18 @@ else:
 * Mais adaptável a mudanças
 """)
                 st.select_slider(
-                        label="",
+                        label="Abertura",
                         key="sabertura_a_experiencias",
-                        options=['Extrovertido', 'Parcialmente Extrovertido', 'Neutro', 'Parcialmente Introvertido', 'Introvertido'],
-                        value=(get_slider_name(round(abertura_a_experiencias)),get_slider_name(round(abertura_a_experiencias))),
+                        options=['Convencional', 'Parcialmente Convencional', 'Neutro', 'Parcialmente Aberto a Exper.', 'Aberto a Exper.'],
+                        value=(get_slider_name_abertura_experiencias(round(abertura_a_experiencias)), get_slider_name_abertura_experiencias(round(abertura_a_experiencias))),
                         #disabled=True, 
                         label_visibility ="hidden"
                 )
                 col1b, col2b = st.columns(2)
                 with col1b:
-                    st.write("Aberto a exper. = (criativo, curioso, sensível artisiticamente, independente, imaginativo)")
+                    st.write("Convencional = (convencional, conservador, prefere coisas familiares, conformista, prático)")
                 with col2b:
-                    st.write("Convencional. = (convencional, conservador, prefere coisas familiares, conformista, prático)")
-                    
-                
+                    st.write("Aberto a Exper. = (criativo, curioso, sensível artisiticamente, independente, imaginativo)")
             else:
                 st.warning("Aluno ainda não respondeu ao questionário.")
 
@@ -419,7 +461,7 @@ else:
             enviar_dica_professor(id_estudante_selecionado, txt_titulo_dica_prof, txt_desc_dica_prof)
             
         with dicas_automaticas:
-            st.success("Dicas automáticas identenficadas pela análise do perfil de autorregulação")
+            st.success("Recomendações automáticas identenficadas pela análise do perfil de autorregulação")
             
             df_quest_reg = st.session_state["df_respostas"]
             if len (df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado]) > 0:

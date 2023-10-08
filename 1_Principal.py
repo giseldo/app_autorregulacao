@@ -21,15 +21,17 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/classroom.courses
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 
-st.title("NEOMonitor - Um AVA para auxiliar o professor e o estudante. (v1.4)")
+st.title("NEOAVA - Um ambiente virtual para auxiliar o professor e o estudante com autorregulação")
 st.markdown("""
-             Esse AVA é intregrado com o Sala de Aula e apresenta o perfil de autorregulação e bigfive dos estudantes! Dicas automáticas são geradas para o perfil de acordo com o perfil de autorregulação/bigfive do estudante!
-             O momento de envio das dicas fica a cargo do professor!
-             Doutorado de Alana Viana Borges Neo (email: viana.alana@gmail.com)
-             @ Todos os direitos reservados.
+             * Esse AVA apresenta o perfil de autorregulação e bigfive dos estudantes! 
+             * Recomendações são geradas para o estudante de acordo com o perfil de autorregulação e bigfive!
+             * O momento de envio das dicas fica a cargo do professor!
+             * Prova de conceito para o Doutorado de Alana Viana Borges Neo (email: viana.alana@gmail.com)
+             * Este AVA é construído baseado no Livro [Estratégias para recomendações de técnicas de autorregulação da aprendizagem](https://www.amazon.com/Estrat%C3%A9gias-recomenda%C3%A7%C3%B5es-t%C3%A9cnicas-autorregula%C3%A7%C3%A3o-aprendizagem-ebook/dp/B0CJWVN1VW/ref=sr_1_10?crid=FZTC9AFISN9N&keywords=autorregula%C3%A7%C3%A3o&qid=1696803151&sprefix=autorregula%C3%A7%C3%A3o%2Caps%2C172&sr=8-10), Alana Neo, 1ª Edição, (2023)
+             * Para acesso é necessário autorização. Envie um email para viana.alana@gmail.com com a solicitação para efetuar login.
             """)
 
-st.warning("Esse aplicativo é integrado com o Google Sala de aula associado a sua conta de email. Portanto é preciso efetuar login com a sua conta do google que deseja utilizar.")
+st.warning("Esse aplicativo é integrado com o Google Sala de aula. Portanto, é preciso efetuar login com a sua conta do google que deseja utilizar. ")
 # Check if token exists in session state
 if 'token' not in st.session_state:
     # If not, show authorize button
@@ -67,10 +69,7 @@ else:
     service = build('classroom', 'v1', credentials=creds)
     
     st.session_state["limite"] = 4
-    st.session_state["limite_bigfive"] = 3
     
-
-    # carrregar curso
     results = service.courses().list(pageSize=10).execute()
     courses = results.get("courses", [])
     lista_curso = list()
@@ -87,8 +86,6 @@ else:
     def carregar_alunos(id_curso_selecionado):
         creds = Credentials(token=access_token)
         classroom = build('classroom', 'v1', credentials=creds)
-        
-        # carrregar estudantes daquele curso
         results = classroom.courses().students().list(courseId=id_curso_selecionado).execute()
         estudantes = results.get("students", [])
         lista_estudante = list()
@@ -96,7 +93,6 @@ else:
             lista_estudante.append([estudante['userId'], estudante["profile"]["name"]["fullName"], estudante["profile"]["emailAddress"]])
         df_estudantes = pd.DataFrame(lista_estudante, columns=["userId", "nome", "email"])    
         st.session_state["df_estudantes"] = df_estudantes
-        
         st.success("Todos os estudantes carregados!")
         
     if btn_carregar_curso:
@@ -106,5 +102,4 @@ else:
         st.write("ID do curso selecionado: ", id_curso_selecionado)
         st.session_state["id_curso_selecionado"] = id_curso_selecionado
         carregar_alunos(id_curso_selecionado)
-        
         st.success("Todos os dados carregados!")
