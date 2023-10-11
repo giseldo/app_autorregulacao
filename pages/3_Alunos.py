@@ -27,15 +27,15 @@ else:
         analise_big_five, grafico_big_five, dados_big_five = st.tabs(["Análise", "Gráfico", "Dados"])
         with dados_big_five:
             df_quest_reg_big_five = st.session_state["df_respostas_big_five"] 
-            if len (df_quest_reg_big_five[df_quest_reg_big_five["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                df_quest_reg_big_five_s = df_quest_reg_big_five[df_quest_reg_big_five["Nome de usuário"] == email_estudante_selecionado].iloc[0]
+            if len (df_quest_reg_big_five[df_quest_reg_big_five["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
+                df_quest_reg_big_five_s = df_quest_reg_big_five[df_quest_reg_big_five["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
                 df_quest_reg_big_five_s
             else: 
                 st.warning("Aluno ainda não respondeu ao questionário do Big Five.")
         with grafico_big_five:
             df_respostas_big_five = st.session_state["df_respostas_big_five"]
-            if len (df_respostas_big_five[df_respostas_big_five["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                dfbf = df_respostas_big_five[df_respostas_big_five["Nome de usuário"] == email_estudante_selecionado].iloc[0]           
+            if len (df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
+                dfbf = df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]           
                 extroversao = np.mean([dfbf.iloc[2], dfbf.iloc[7], dfbf.iloc[12], dfbf.iloc[17], dfbf.iloc[22], dfbf.iloc[27], dfbf.iloc[31], dfbf.iloc[37]])
                 amababilidade = np.mean([dfbf.iloc[3], dfbf.iloc[8], dfbf.iloc[13], dfbf.iloc[18], dfbf.iloc[23], dfbf.iloc[28], dfbf.iloc[33], dfbf.iloc[38], dfbf.iloc[43]])
                 conscienciosidade = np.mean([dfbf.iloc[4], dfbf.iloc[9], dfbf.iloc[14], dfbf.iloc[19], dfbf.iloc[24], dfbf.iloc[29], dfbf.iloc[34], dfbf.iloc[39], dfbf.iloc[44]])
@@ -55,8 +55,8 @@ else:
                 
         with analise_big_five:
             df_respostas_big_five = st.session_state["df_respostas_big_five"]
-            if len (df_respostas_big_five[df_respostas_big_five["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                dfbf = df_respostas_big_five[df_respostas_big_five["Nome de usuário"] == email_estudante_selecionado].iloc[0]
+            if len (df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
+                dfbf = df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
                 extroversao = np.mean([dfbf.iloc[2], dfbf.iloc[7], dfbf.iloc[12], dfbf.iloc[17], dfbf.iloc[22], dfbf.iloc[27], dfbf.iloc[31], dfbf.iloc[37]])
                 amababilidade = np.mean([dfbf.iloc[3], dfbf.iloc[8], dfbf.iloc[13], dfbf.iloc[18], dfbf.iloc[23], dfbf.iloc[28], dfbf.iloc[33], dfbf.iloc[38], dfbf.iloc[43]])
                 conscienciosidade = np.mean([dfbf.iloc[4], dfbf.iloc[9], dfbf.iloc[14], dfbf.iloc[19], dfbf.iloc[24], dfbf.iloc[29], dfbf.iloc[34], dfbf.iloc[39], dfbf.iloc[44]])
@@ -266,16 +266,16 @@ else:
         
         with dados:
             df_quest_reg = st.session_state["df_respostas"] 
-            if len (df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                df_quest_reg_s = df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado].iloc[0]
+            if len (df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
+                df_quest_reg_s = df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
                 df_quest_reg_s
             else: 
                 st.warning("Aluno ainda não respondeu ao questionário.")
 
         with analise:
             df_quest_reg = st.session_state["df_respostas"]
-            if len (df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                dfreg = df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado].iloc[0]   
+            if len (df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
+                dfreg = df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]   
                 media_orientacao_metas_intrinsecas = np.mean([dfreg.iloc[2], dfreg.iloc[3]])
                 media_orientacao_metas_extrinsicas = np.mean([dfreg.iloc[4], dfreg.iloc[5]])
                 media_valorizacao_da_atividade = np.mean([dfreg.iloc[6], dfreg.iloc[7], dfreg.iloc[8], dfreg.iloc[9], dfreg.iloc[10], dfreg.iloc[11]])
@@ -397,8 +397,8 @@ else:
                     
         with grafico:
             df_quest_reg = st.session_state["df_respostas"]
-            if len (df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado]) > 0:
-                dfreg = df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado].iloc[0]
+            if len (df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
+                dfreg = df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
                 media_orientacao_metas_intrinsecas = np.mean([dfreg.iloc[2], dfreg.iloc[3]])
                 media_orientacao_metas_extrinsicas = np.mean([dfreg.iloc[4], dfreg.iloc[5]])
                 media_valorizacao_da_atividade = np.mean([dfreg.iloc[6], dfreg.iloc[7], dfreg.iloc[8], dfreg.iloc[9], dfreg.iloc[10], dfreg.iloc[11]])
@@ -470,9 +470,9 @@ possa finalizar o módulo com aproveitamento apropriado, pois seu rendimento de 
             st.success("Recomendações automáticas identificadas pela análise do perfil de autorregulação")
             
             df_quest_reg = st.session_state["df_respostas"]
-            if len (df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado]) > 0:
+            if len (df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
                 
-                dfreg = df_quest_reg[df_quest_reg["Nome de usuário"] == email_estudante_selecionado].iloc[0]
+                dfreg = df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
                 
                 media_orientacao_metas_intrinsecas = np.mean([dfreg.iloc[2], dfreg.iloc[3]])
                 media_orientacao_metas_extrinsicas = np.mean([dfreg.iloc[4], dfreg.iloc[5]])

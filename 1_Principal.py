@@ -17,19 +17,19 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 REFRESH_TOKEN_URL = "https://oauth2.googleapis.com/token"
 REVOKE_TOKEN_URL = "https://oauth2.googleapis.com/revoke"
 
-SCOPES = "openid profile email https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/drive.readonly.metadata https://www.googleapis.com/auth/classroom.announcements https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/classroom.coursework.me https://www.googleapis.com/auth/classroom.coursework.students https://www.googleapis.com/auth/classroom.courseworkmaterials https://www.googleapis.com/auth/classroom.guardianlinks.students https://www.googleapis.com/auth/classroom.profile.emails https://www.googleapis.com/auth/classroom.profile.photos https://www.googleapis.com/auth/classroom.push-notifications https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.rosters.readonly https://www.googleapis.com/auth/classroom.topics"
+SCOPES = "openid profile email https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/drive.readonly.metadata https://www.googleapis.com/auth/classroom.announcements https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/classroom.coursework.me https://www.googleapis.com/auth/classroom.coursework.students https://www.googleapis.com/auth/classroom.courseworkmaterials https://www.googleapis.com/auth/classroom.guardianlinks.students https://www.googleapis.com/auth/classroom.profile.emails https://www.googleapis.com/auth/classroom.profile.photos https://www.googleapis.com/auth/classroom.push-notifications https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.rosters.readonly https://www.googleapis.com/auth/classroom.topics"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
-
-st.title("NEOAVA - Um ambiente virtual para auxiliar o professor e o estudante com autorregulação")
-st.markdown("""
-             * Esse AVA apresenta o perfil de autorregulação e bigfive dos estudantes! 
-             * Recomendações são geradas para o estudante de acordo com o perfil de autorregulação e bigfive!
-             * O momento de envio das dicas fica a cargo do professor!
-             * Prova de conceito para o Doutorado de Alana Viana Borges Neo (email: viana.alana@gmail.com)
-             * Este AVA é construído baseado no Livro [Estratégias para recomendações de técnicas de autorregulação da aprendizagem](https://www.amazon.com/Estrat%C3%A9gias-recomenda%C3%A7%C3%B5es-t%C3%A9cnicas-autorregula%C3%A7%C3%A3o-aprendizagem-ebook/dp/B0CJWVN1VW/ref=sr_1_10?crid=FZTC9AFISN9N&keywords=autorregula%C3%A7%C3%A3o&qid=1696803151&sprefix=autorregula%C3%A7%C3%A3o%2Caps%2C172&sr=8-10), Alana Neo, 1ª Edição, (2023)
-             * Para acesso é necessário autorização. Envie um email para viana.alana@gmail.com com a solicitação para efetuar login.
-            """)
+st.title("NEOAVA")
+st.subheader("Um ambiente virtual para auxiliar o professor e o estudante com autorregulação")
+#st.markdown("""
+#             * Esse AVA apresenta o perfil de autorregulação e bigfive dos estudantes! 
+#             * Recomendações são geradas para o estudante de acordo com o perfil de autorregulação e bigfive!
+#             * O momento de envio das dicas fica a cargo do professor!
+#             * Prova de conceito para o Doutorado de Alana Viana Borges Neo (email: viana.alana@gmail.com)
+#             * Este AVA é construído baseado no Livro [Estratégias para recomendações de técnicas de autorregulação da aprendizagem](https://www.amazon.com/Estrat%C3%A9gias-recomenda%C3%A7%C3%B5es-t%C3%A9cnicas-autorregula%C3%A7%C3%A3o-aprendizagem-ebook/dp/B0CJWVN1VW/ref=sr_1_10?crid=FZTC9AFISN9N&keywords=autorregula%C3%A7%C3%A3o&qid=1696803151&sprefix=autorregula%C3%A7%C3%A3o%2Caps%2C172&sr=8-10), Alana Neo, 1ª Edição, (2023)
+#             * Para acesso é necessário autorização. Envie um email para viana.alana@gmail.com com a solicitação para efetuar login.
+#            """)
 
 st.warning("Esse aplicativo é integrado com o Google Sala de aula. Portanto, é preciso efetuar login com a sua conta do google que deseja utilizar. ")
 # Check if token exists in session state
@@ -49,14 +49,6 @@ else:
         
     st.warning("Aguarde carregar TODOS os dados antes de continuar.")
     
-    # carregar as respostas de autorregulação
-    df_respostas = pd.read_csv("datasets/resposta_autorregulacao_v2.csv")
-    st.session_state["df_respostas"] = df_respostas
-    
-    # carregar questoes do big five    
-    df_respostas_big_five = pd.read_csv("datasets/resposta_bigfive_v2.csv")
-    st.session_state["df_respostas_big_five"] = df_respostas_big_five  
-
     # carregar as questoes do mslq
     df_questoes_mslq = pd.read_csv("datasets/mslq.csv")
     st.session_state["df_questoes_mslq"] = df_questoes_mslq
@@ -67,6 +59,52 @@ else:
     
     creds = Credentials(token=access_token)
     service = build('classroom', 'v1', credentials=creds)
+    
+    def carregar_dataframe_autorregulacao_novo():
+        spreadsheet_id="19Bn8EFdhkSx71m0PkvoG8GbEUJW7vNRdJBdatfn6Keg"
+        creds = Credentials(token=access_token)
+        service = build('sheets', 'v4', credentials=creds)
+        result = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id, range="A1:AT10").execute()
+        rows = result.get('values', [])
+   
+        panda_df = pd.DataFrame(data = rows[1:], columns=rows[0])
+        
+        panda_df = panda_df.astype({panda_df.columns[2]: int, panda_df.columns[3]: int, panda_df.columns[4]: int, panda_df.columns[5]: int, panda_df.columns[6]: int, panda_df.columns[7]: int, panda_df.columns[8]: int, panda_df.columns[9]: int, panda_df.columns[10]: int,
+        panda_df.columns[11]: int, panda_df.columns[12]: int, panda_df.columns[13]: int, panda_df.columns[14]: int, panda_df.columns[15]: int, panda_df.columns[16]: int, panda_df.columns[17]: int, panda_df.columns[18]: int, panda_df.columns[19]: int, panda_df.columns[20]: int,
+        panda_df.columns[21]: int, panda_df.columns[22]: int, panda_df.columns[23]: int, panda_df.columns[24]: int, panda_df.columns[25]: int, panda_df.columns[26]: int, panda_df.columns[27]: int, panda_df.columns[28]: int, panda_df.columns[29]: int, panda_df.columns[30]: int,
+        panda_df.columns[31]: int, panda_df.columns[32]: int, panda_df.columns[33]: int, panda_df.columns[34]: int, panda_df.columns[35]: int, panda_df.columns[36]: int, panda_df.columns[37]: int, panda_df.columns[38]: int, panda_df.columns[39]: int, panda_df.columns[40]: int,
+        panda_df.columns[41]: int, panda_df.columns[42]: int, panda_df.columns[43]: int, panda_df.columns[44]: int, panda_df.columns[45]: int})
+                        
+        return panda_df
+        #return pd.read_csv("datasets/resposta_autorregulacao_v2.csv")
+        
+    def carregar_dataframe_bigfive_novo():
+        spreadsheet_id="19Py0-JS3o2QDEdCX2EaJ2vV3M8uTUIgX8q52BQ4NiY4"
+        creds = Credentials(token=access_token)
+        service = build('sheets', 'v4', credentials=creds)
+        result = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id, range="A1:AT10").execute()
+        rows = result.get('values', [])
+   
+        panda_df = pd.DataFrame(data = rows[1:], columns=rows[0])
+                                
+        panda_df = panda_df.astype({panda_df.columns[2]: int, panda_df.columns[3]: int, panda_df.columns[4]: int, panda_df.columns[5]: int, panda_df.columns[6]: int, panda_df.columns[7]: int, panda_df.columns[8]: int, panda_df.columns[9]: int, panda_df.columns[10]: int,
+        panda_df.columns[11]: int, panda_df.columns[12]: int, panda_df.columns[13]: int, panda_df.columns[14]: int, panda_df.columns[15]: int, panda_df.columns[16]: int, panda_df.columns[17]: int, panda_df.columns[18]: int, panda_df.columns[19]: int, panda_df.columns[20]: int,
+        panda_df.columns[21]: int, panda_df.columns[22]: int, panda_df.columns[23]: int, panda_df.columns[24]: int, panda_df.columns[25]: int, panda_df.columns[26]: int, panda_df.columns[27]: int, panda_df.columns[28]: int, panda_df.columns[29]: int, panda_df.columns[30]: int,
+        panda_df.columns[31]: int, panda_df.columns[32]: int, panda_df.columns[33]: int, panda_df.columns[34]: int, panda_df.columns[35]: int, panda_df.columns[36]: int, panda_df.columns[37]: int, panda_df.columns[38]: int, panda_df.columns[39]: int, panda_df.columns[40]: int,
+        panda_df.columns[41]: int, panda_df.columns[42]: int, panda_df.columns[43]: int, panda_df.columns[44]: int, panda_df.columns[45]: int})
+                        
+        return panda_df
+        #return pd.read_csv("datasets/resposta_bigfive_v2.csv")
+    
+    # carregar as respostas de autorregulação
+    df_respostas = carregar_dataframe_autorregulacao_novo()
+    st.session_state["df_respostas"] = df_respostas
+    
+     # carregar questoes do big five    
+    df_respostas_big_five = carregar_dataframe_bigfive_novo()
+    st.session_state["df_respostas_big_five"] = df_respostas_big_five  
     
     st.session_state["limite"] = 4
     
@@ -93,13 +131,13 @@ else:
             lista_estudante.append([estudante['userId'], estudante["profile"]["name"]["fullName"], estudante["profile"]["emailAddress"]])
         df_estudantes = pd.DataFrame(lista_estudante, columns=["userId", "nome", "email"])    
         st.session_state["df_estudantes"] = df_estudantes
-        st.success("Todos os estudantes carregados!")
+        #st.success("Todos os estudantes carregados!")
         
     if btn_carregar_curso:
-        st.write("Curso Selecionado: ", curso_selecionado)
+        #st.write("Curso Selecionado: ", curso_selecionado)
         df_curso = df_cursos[df_cursos["nome"]==curso_selecionado]
         id_curso_selecionado = df_curso["id"].iloc[0]
-        st.write("ID do curso selecionado: ", id_curso_selecionado)
+        #st.write("ID do curso selecionado: ", id_curso_selecionado)
         st.session_state["id_curso_selecionado"] = id_curso_selecionado
         carregar_alunos(id_curso_selecionado)
         st.success("Todos os dados carregados!")
