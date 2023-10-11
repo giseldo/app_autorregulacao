@@ -21,7 +21,7 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/spreadsheets http
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 st.title("NEOAVA")
-st.subheader("Um ambiente virtual para auxiliar o professor e o estudante com autorregulação")
+st.subheader("Um ambiente virtual para auxiliar o professor e o estudante com autorregulação e bigfive")
 #st.markdown("""
 #             * Esse AVA apresenta o perfil de autorregulação e bigfive dos estudantes! 
 #             * Recomendações são geradas para o estudante de acordo com o perfil de autorregulação e bigfive!
