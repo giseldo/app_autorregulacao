@@ -1,6 +1,7 @@
 import streamlit as st
 
 st.title("Lista dos cursos do sala de aula")
+st.divider()
     
 if "df_cursos" not in st.session_state:
     st.error("Volte para a tela principal faça login e carregue uma turma!")

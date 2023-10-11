@@ -4,7 +4,8 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.discovery import build
 
-st.title("Enviar dicas para todos os alunos")
+st.title("Enviar recomendações personalizadas para todos os alunos")
+st.divider()
 
 if "df_estudantes" not in st.session_state:
     st.error("Volte para a tela principal faça login e carregue uma turma!")

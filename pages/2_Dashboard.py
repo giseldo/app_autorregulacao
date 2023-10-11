@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 st.title("Dashboard da turma")
+st.divider()
 
 if "df_estudantes" not in st.session_state:
     st.error("Volte para a tela principal faça login e carregue uma turma!")

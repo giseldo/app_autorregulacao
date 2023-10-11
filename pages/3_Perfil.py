@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from google.oauth2.credentials import Credentials 
 
-st.title("Dados do aluno")
+st.title("Perfil dos alunos")
+st.divider()
 
 if "id_curso_selecionado" not in st.session_state:
     st.error("Volte para a tela principal faça login e carregue uma turma!")
@@ -15,12 +16,9 @@ else:
     aluno_selecionado = st.selectbox("Aluno", df_estudantes["nome"])
     df_estudante_selecionado = df_estudantes[df_estudantes["nome"] == aluno_selecionado].iloc[0]
     nome_estudante_selecionado = df_estudante_selecionado["nome"]
-    #st.title(nome_estudante_selecionado)
     id_estudante_selecionado = df_estudante_selecionado["userId"]
-    #st.write(df_estudante_selecionado["userId"])
     email_estudante_selecionado = df_estudante_selecionado["email"]
-    #st.write(email_estudante_selecionado)
-    #st.warning("O Aluno solicitou ajuda!!")
+    
     autorregulacao, bigfive,dicas = st.tabs(["Autorregulação", "Bigfive", "Recomendação"])
         
     with bigfive:
@@ -36,11 +34,11 @@ else:
             df_respostas_big_five = st.session_state["df_respostas_big_five"]
             if len (df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
                 dfbf = df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]           
-                extroversao = np.mean([dfbf.iloc[2], dfbf.iloc[7], dfbf.iloc[12], dfbf.iloc[17], dfbf.iloc[22], dfbf.iloc[27], dfbf.iloc[31], dfbf.iloc[37]])
-                amababilidade = np.mean([dfbf.iloc[3], dfbf.iloc[8], dfbf.iloc[13], dfbf.iloc[18], dfbf.iloc[23], dfbf.iloc[28], dfbf.iloc[33], dfbf.iloc[38], dfbf.iloc[43]])
-                conscienciosidade = np.mean([dfbf.iloc[4], dfbf.iloc[9], dfbf.iloc[14], dfbf.iloc[19], dfbf.iloc[24], dfbf.iloc[29], dfbf.iloc[34], dfbf.iloc[39], dfbf.iloc[44]])
-                estabilidade_emocional = np.mean([dfbf.iloc[5], dfbf.iloc[10], dfbf.iloc[15], dfbf.iloc[20], dfbf.iloc[25], dfbf.iloc[30], dfbf.iloc[35], dfbf.iloc[40]])
-                abertura_a_experiencias = np.mean([dfbf.iloc[6], dfbf.iloc[11], dfbf.iloc[16], dfbf.iloc[21], dfbf.iloc[26], dfbf.iloc[31], dfbf.iloc[36], dfbf.iloc[41], dfbf.iloc[42], dfbf.iloc[45]])
+                extroversao = np.mean([dfbf.iloc[2], 6 - dfbf.iloc[7], dfbf.iloc[12], dfbf.iloc[17], 6 - dfbf.iloc[22], dfbf.iloc[27], 6 - dfbf.iloc[32], dfbf.iloc[37]])
+                amababilidade = np.mean([6 - dfbf.iloc[3], dfbf.iloc[8], 6 - dfbf.iloc[13], dfbf.iloc[18], dfbf.iloc[23], 6 - dfbf.iloc[28], dfbf.iloc[33], 6 - dfbf.iloc[38], dfbf.iloc[43]])
+                conscienciosidade = np.mean([dfbf.iloc[4], 6 - dfbf.iloc[9], dfbf.iloc[14], 6 - dfbf.iloc[19], 6 - dfbf.iloc[24], dfbf.iloc[29], dfbf.iloc[34], dfbf.iloc[39], 6 - dfbf.iloc[44]])
+                estabilidade_emocional = np.mean([6 - dfbf.iloc[5], dfbf.iloc[10], 6 - dfbf.iloc[15], 6 - dfbf.iloc[20], dfbf.iloc[25], 6 - dfbf.iloc[30], dfbf.iloc[35], 6- dfbf.iloc[40]])
+                abertura_a_experiencias = np.mean([dfbf.iloc[6], dfbf.iloc[11], dfbf.iloc[16], dfbf.iloc[21], dfbf.iloc[26], dfbf.iloc[31], 6- dfbf.iloc[36], dfbf.iloc[41], 6 - dfbf.iloc[42], dfbf.iloc[45]])
                 st.success("Perfil do Bigfive")
                 fig, ax = plt.subplots()
                 constructors = ["Extroversao", "Amababilidade", "Conscienciosidade", "Estabilidade Emocional", "Abertura a experiencias"]
@@ -57,11 +55,11 @@ else:
             df_respostas_big_five = st.session_state["df_respostas_big_five"]
             if len (df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
                 dfbf = df_respostas_big_five[df_respostas_big_five["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
-                extroversao = np.mean([dfbf.iloc[2], dfbf.iloc[7], dfbf.iloc[12], dfbf.iloc[17], dfbf.iloc[22], dfbf.iloc[27], dfbf.iloc[31], dfbf.iloc[37]])
-                amababilidade = np.mean([dfbf.iloc[3], dfbf.iloc[8], dfbf.iloc[13], dfbf.iloc[18], dfbf.iloc[23], dfbf.iloc[28], dfbf.iloc[33], dfbf.iloc[38], dfbf.iloc[43]])
-                conscienciosidade = np.mean([dfbf.iloc[4], dfbf.iloc[9], dfbf.iloc[14], dfbf.iloc[19], dfbf.iloc[24], dfbf.iloc[29], dfbf.iloc[34], dfbf.iloc[39], dfbf.iloc[44]])
-                estabilidade_emocional = np.mean([dfbf.iloc[5], dfbf.iloc[10], dfbf.iloc[15], dfbf.iloc[20], dfbf.iloc[25], dfbf.iloc[30], dfbf.iloc[35], dfbf.iloc[40]])
-                abertura_a_experiencias = np.mean([dfbf.iloc[6], dfbf.iloc[11], dfbf.iloc[16], dfbf.iloc[21], dfbf.iloc[26], dfbf.iloc[31], dfbf.iloc[36], dfbf.iloc[41], dfbf.iloc[42], dfbf.iloc[45]])
+                extroversao = np.mean([dfbf.iloc[2], 6 - dfbf.iloc[7], dfbf.iloc[12], dfbf.iloc[17], 6 - dfbf.iloc[22], dfbf.iloc[27], 6 - dfbf.iloc[32], dfbf.iloc[37]])
+                amababilidade = np.mean([6 - dfbf.iloc[3], dfbf.iloc[8], 6 - dfbf.iloc[13], dfbf.iloc[18], dfbf.iloc[23], 6 - dfbf.iloc[28], dfbf.iloc[33], 6 - dfbf.iloc[38], dfbf.iloc[43]])
+                conscienciosidade = np.mean([dfbf.iloc[4], 6 - dfbf.iloc[9], dfbf.iloc[14], 6 - dfbf.iloc[19], 6 - dfbf.iloc[24], dfbf.iloc[29], dfbf.iloc[34], dfbf.iloc[39], 6 - dfbf.iloc[44]])
+                estabilidade_emocional = np.mean([6 - dfbf.iloc[5], dfbf.iloc[10], 6 - dfbf.iloc[15], 6 - dfbf.iloc[20], dfbf.iloc[25], 6 - dfbf.iloc[30], dfbf.iloc[35], 6- dfbf.iloc[40]])
+                abertura_a_experiencias = np.mean([dfbf.iloc[6], dfbf.iloc[11], dfbf.iloc[16], dfbf.iloc[21], dfbf.iloc[26], dfbf.iloc[31], 6- dfbf.iloc[36], dfbf.iloc[41], 6 - dfbf.iloc[42], dfbf.iloc[45]])
                 col1, col2, col3 = st.columns(3)
                 col4, col5, col6 = st.columns(3)
                 

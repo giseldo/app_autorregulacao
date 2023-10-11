@@ -5,6 +5,7 @@ from googleapiclient.discovery import build
 
 
 st.title(f"Lista dos alunos do sala de aula.")
+st.divider()
 
 if "id_curso_selecionado" not in st.session_state:
     st.error("Volte para a tela principal faça login e carregue uma turma!")

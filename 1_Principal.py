@@ -21,15 +21,9 @@ SCOPES = "openid profile email https://www.googleapis.com/auth/spreadsheets http
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
 st.title("NEOAVA")
+st.divider()
+
 st.subheader("Um ambiente virtual para auxiliar o professor e o estudante com autorregulação e bigfive")
-#st.markdown("""
-#             * Esse AVA apresenta o perfil de autorregulação e bigfive dos estudantes! 
-#             * Recomendações são geradas para o estudante de acordo com o perfil de autorregulação e bigfive!
-#             * O momento de envio das dicas fica a cargo do professor!
-#             * Prova de conceito para o Doutorado de Alana Viana Borges Neo (email: viana.alana@gmail.com)
-#             * Este AVA é construído baseado no Livro [Estratégias para recomendações de técnicas de autorregulação da aprendizagem](https://www.amazon.com/Estrat%C3%A9gias-recomenda%C3%A7%C3%B5es-t%C3%A9cnicas-autorregula%C3%A7%C3%A3o-aprendizagem-ebook/dp/B0CJWVN1VW/ref=sr_1_10?crid=FZTC9AFISN9N&keywords=autorregula%C3%A7%C3%A3o&qid=1696803151&sprefix=autorregula%C3%A7%C3%A3o%2Caps%2C172&sr=8-10), Alana Neo, 1ª Edição, (2023)
-#             * Para acesso é necessário autorização. Envie um email para viana.alana@gmail.com com a solicitação para efetuar login.
-#            """)
 
 st.warning("Esse aplicativo é integrado com o Google Sala de aula. Portanto, é preciso efetuar login com a sua conta do google que deseja utilizar. ")
 # Check if token exists in session state
