@@ -10,14 +10,12 @@ if "df_estudantes" not in st.session_state:
 else:
 
     st.markdown('### Métricas da turma')
-    col1, col2, col3 = st.columns(3)
-
     df_estudantes = st.session_state["df_estudantes"]
-
-    col1.metric("Total de Alunos", len(df_estudantes))
-
-    category_names = ['Discodo totalmente', 'Discordo',
-                    'indiferente', 'Concordo', 'Concordo totalmente']
+    st.metric(label="Total de Alunos", value=len(df_estudantes))
+    
+#col1, col2, col3 = st.columns(3)
+#category_names = ['Discodo totalmente', 'Discordo',
+#                    'indiferente', 'Concordo', 'Concordo totalmente']
 # results = {
 #     'Extroversão': [1, 0, 0, 0, 1],
 #     'Amababilidade': [1, 0, 0, 0, 1],

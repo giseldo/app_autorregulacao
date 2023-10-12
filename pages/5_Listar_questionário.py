@@ -9,4 +9,8 @@ if "id_curso_selecionado" not in st.session_state:
 else: 
 
     df_mslq = pd.read_csv("datasets/mslq.csv", names=["id_questao","Tipo","Constructo","Questão"], header=0 , usecols=["Tipo","Constructo","Questão"])
-    df_mslq
+    st.dataframe(df_mslq, hide_index=True)
+    
+    
+    
+    

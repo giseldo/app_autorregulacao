@@ -15,8 +15,12 @@ else:
     id_curso_selecionado = st.session_state["id_curso_selecionado"]
 
     st.write("Dados dos alunos")
-    df_estudantes
-
+    
+    st.dataframe(df_estudantes, hide_index=True,  
+    column_config={"userId": "ID do usuário",
+        "nome": "Nome",
+        "email": "E-mail"} )
+    
     st.write("Dicas para todos os alunos")
     txt_titulo_dica_prof = st.text_input("Título", key="txt_titulo_dica_prof")
     txt_desc_dica_prof = st.text_area("Descrição", key="txt_desc_dica_prof")

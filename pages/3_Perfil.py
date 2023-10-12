@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 import numpy as np
 import matplotlib.pyplot as plt
 from google.oauth2.credentials import Credentials 
+import pandas as pd
 
 st.title("Perfil dos alunos")
 st.divider()
@@ -26,8 +27,11 @@ else:
         with dados_big_five:
             df_quest_reg_big_five = st.session_state["df_respostas_big_five"] 
             if len (df_quest_reg_big_five[df_quest_reg_big_five["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
-                df_quest_reg_big_five_s = df_quest_reg_big_five[df_quest_reg_big_five["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
-                df_quest_reg_big_five_s
+                df_quest_reg_big_five_s = df_quest_reg_big_five[df_quest_reg_big_five["Endereço de e-mail"] == email_estudante_selecionado]
+                st.dataframe(df_quest_reg_big_five_s.T[2:], 
+                             column_config={"": "Pergunta", "3": "Resposta"})
+                             
+                
             else: 
                 st.warning("Aluno ainda não respondeu ao questionário do Big Five.")
         with grafico_big_five:
@@ -265,8 +269,8 @@ else:
         with dados:
             df_quest_reg = st.session_state["df_respostas"] 
             if len (df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado]) > 0:
-                df_quest_reg_s = df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado].iloc[0]
-                df_quest_reg_s
+                df_quest_reg_s = df_quest_reg[df_quest_reg["Endereço de e-mail"] == email_estudante_selecionado]
+                st.dataframe(df_quest_reg_s.T[2:], column_config={"": "Pergunta", "3": "Resposta"})
             else: 
                 st.warning("Aluno ainda não respondeu ao questionário.")
 
