@@ -34,7 +34,6 @@ if 'token' not in st.session_state:
     if result and 'token' in result:
         # If authorization successful, save token in session state
         st.session_state.token = result.get('token')
-        st.experimental_rerun()
 else:
     # If token exists in session state, show the token
     token = st.session_state['token']
