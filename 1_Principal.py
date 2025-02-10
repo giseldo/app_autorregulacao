@@ -20,9 +20,8 @@ REVOKE_TOKEN_URL = "https://oauth2.googleapis.com/revoke"
 SCOPES = "openid profile email https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/drive.readonly.metadata https://www.googleapis.com/auth/classroom.announcements https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/classroom.coursework.me https://www.googleapis.com/auth/classroom.coursework.students https://www.googleapis.com/auth/classroom.courseworkmaterials https://www.googleapis.com/auth/classroom.guardianlinks.students https://www.googleapis.com/auth/classroom.profile.emails https://www.googleapis.com/auth/classroom.profile.photos https://www.googleapis.com/auth/classroom.push-notifications https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.rosters.readonly https://www.googleapis.com/auth/classroom.topics"
 
 oauth2 = OAuth2Component(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, authorize_endpoint=AUTHORIZE_URL, token_endpoint=TOKEN_URL, refresh_token_endpoint=REFRESH_TOKEN_URL, revoke_token_endpoint=REVOKE_TOKEN_URL)
-st.title("NEOAVA - v2")
+st.title("NEOAVA - Um ambiente virtual de aprendizagem com foco em autorregulação")
 st.divider()
-st.subheader("Um ambiente virtual para auxiliar o professor e o estudante com autorregulação e bigfive")
 
 st.warning("Esse aplicativo é integrado com o Google Sala de aula. Portanto, é preciso efetuar login com a sua conta do google que deseja utilizar. ")
 # Check if token exists in session state
@@ -33,6 +32,7 @@ if 'token' not in st.session_state:
     if result and 'token' in result:
         # If authorization successful, save token in session state
         st.session_state.token = result.get('token')
+        st.rerun()
 else:
     # If token exists in session state, show the token
     token = st.session_state['token']
