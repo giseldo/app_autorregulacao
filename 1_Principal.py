@@ -20,7 +20,7 @@ REVOKE_TOKEN_URL = "https://oauth2.googleapis.com/revoke"
 SCOPES = "openid profile email https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/drive.readonly.metadata https://www.googleapis.com/auth/classroom.announcements https://www.googleapis.com/auth/classroom.courses https://www.googleapis.com/auth/classroom.coursework.me https://www.googleapis.com/auth/classroom.coursework.students https://www.googleapis.com/auth/classroom.courseworkmaterials https://www.googleapis.com/auth/classroom.guardianlinks.students https://www.googleapis.com/auth/classroom.profile.emails https://www.googleapis.com/auth/classroom.profile.photos https://www.googleapis.com/auth/classroom.push-notifications https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.rosters.readonly https://www.googleapis.com/auth/classroom.topics"
 
 oauth2 = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
-st.title("NEOAVA")
+st.title("NEOAVA v2")
 st.divider()
 
 st.subheader("Um ambiente virtual para auxiliar o professor e o estudante com autorregulação e bigfive")
@@ -134,3 +134,5 @@ else:
         st.session_state["id_curso_selecionado"] = id_curso_selecionado
         carregar_alunos(id_curso_selecionado)
         st.success("Todos os dados carregados!")
+
+
