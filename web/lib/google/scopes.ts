@@ -12,4 +12,7 @@ export const TEACHER_SCOPES = [
   "https://www.googleapis.com/auth/classroom.rosters.readonly",
   "https://www.googleapis.com/auth/classroom.profile.emails",
   "https://www.googleapis.com/auth/classroom.courseworkmaterials",
+  // Dashboard Interação: ler atividades/notas/entregas e avisos da turma.
+  "https://www.googleapis.com/auth/classroom.coursework.students.readonly",
+  "https://www.googleapis.com/auth/classroom.announcements.readonly",
 ].join(" ");

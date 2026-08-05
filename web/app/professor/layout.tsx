@@ -7,6 +7,7 @@ export default async function ProfessorLayout({ children }: { children: ReactNod
 
   const navItems = [
     { href: "/professor/dashboard", icon: "📊", label: "Dashboard" },
+    { href: "/professor/dashboard-interacao", icon: "🤝", label: "Dashboard Interação" },
     { href: "/professor/alunos", icon: "👥", label: "Alunos" },
     { href: "/professor/enviar-sugestao", icon: "✉️", label: "Enviar Sugestão" },
     { href: "/professor/turma", icon: "🏫", label: "Turma" },

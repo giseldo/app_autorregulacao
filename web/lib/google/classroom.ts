@@ -88,6 +88,75 @@ export async function listStudents(accessToken: string, courseId: string): Promi
   return data.students ?? [];
 }
 
+export interface GoogleCourseWork {
+  id: string;
+  title: string;
+  workType?: string;
+  state?: string;
+  maxPoints?: number;
+  creationTime?: string;
+  dueDate?: { year: number; month: number; day: number };
+  alternateLink?: string;
+}
+
+export interface GoogleStudentSubmission {
+  id: string;
+  courseWorkId: string;
+  userId: string;
+  state?: string; // NEW | CREATED | TURNED_IN | RETURNED | RECLAIMED_BY_STUDENT
+  late?: boolean;
+  assignedGrade?: number;
+  updateTime?: string;
+}
+
+export interface GoogleAnnouncement {
+  id: string;
+  text?: string;
+  creationTime?: string;
+  alternateLink?: string;
+}
+
+async function listAllPages<T>(
+  accessToken: string,
+  path: string,
+  key: string
+): Promise<T[]> {
+  const items: T[] = [];
+  let pageToken: string | undefined;
+  do {
+    const sep = path.includes("?") ? "&" : "?";
+    const data = await classroomFetch<Record<string, unknown>>(
+      accessToken,
+      `${path}${sep}pageSize=200${pageToken ? `&pageToken=${pageToken}` : ""}`
+    );
+    items.push(...((data[key] as T[] | undefined) ?? []));
+    pageToken = data.nextPageToken as string | undefined;
+  } while (pageToken);
+  return items;
+}
+
+/** Atividades (courseWork) publicadas na turma — base do Dashboard Interação. */
+export async function listCourseWork(accessToken: string, courseId: string): Promise<GoogleCourseWork[]> {
+  return listAllPages<GoogleCourseWork>(accessToken, `/courses/${courseId}/courseWork`, "courseWork");
+}
+
+/** Entregas de todos os alunos, para todas as atividades da turma de uma vez
+ * (courseWorkId "-" é um curinga aceito pela Classroom API para isso). */
+export async function listAllStudentSubmissions(
+  accessToken: string,
+  courseId: string
+): Promise<GoogleStudentSubmission[]> {
+  return listAllPages<GoogleStudentSubmission>(
+    accessToken,
+    `/courses/${courseId}/courseWork/-/studentSubmissions`,
+    "studentSubmissions"
+  );
+}
+
+export async function listAnnouncements(accessToken: string, courseId: string): Promise<GoogleAnnouncement[]> {
+  return listAllPages<GoogleAnnouncement>(accessToken, `/courses/${courseId}/announcements`, "announcements");
+}
+
 /**
  * Cria um courseWorkMaterial (o mesmo mecanismo que o Streamlit usava para
  * "enviar dica"). `studentEmails` vazio = para toda a turma; a Classroom API
