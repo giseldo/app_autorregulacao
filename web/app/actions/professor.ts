@@ -93,7 +93,7 @@ export async function sendRecommendation(_prev: ActionState, formData: FormData)
   const supabase = await createClient();
 
   const courseId = (formData.get("course_id") as string) || "";
-  const studentId = (formData.get("student_id") as string) || ""; // "" = turma toda
+  const rawTarget = (formData.get("student_id") as string) || ""; // "" = turma toda
   const constructo = (formData.get("constructo") as string) || null;
   const title = ((formData.get("title") as string) || "").trim();
   const content = ((formData.get("content") as string) || "").trim();
@@ -110,17 +110,38 @@ export async function sendRecommendation(_prev: ActionState, formData: FormData)
 
   if (!course) return { error: "Turma não encontrada." };
 
+  // Alvo individual pode ser um aluno já logado (id do profile) ou um aluno
+  // do roster do Classroom que ainda não logou no app (prefixo "email:") —
+  // nesse segundo caso não existe profiles.id ainda, então guardamos só o
+  // e-mail em roster_email e publicamos no Classroom por e-mail mesmo assim.
+  let studentId: string | null = null;
+  let rosterEmail: string | null = null;
   let studentEmail: string | null = null;
-  if (studentId) {
-    const { data: student } = await supabase.from("profiles").select("email").eq("id", studentId).single();
-    studentEmail = student?.email ?? null;
+
+  if (rawTarget.startsWith("email:")) {
+    const email = rawTarget.slice("email:".length);
+    const { data: rosterRow } = await supabase
+      .from("course_roster")
+      .select("email")
+      .eq("course_id", courseId)
+      .eq("email", email)
+      .maybeSingle();
+    if (!rosterRow) return { error: "Aluno não encontrado na turma." };
+    rosterEmail = email;
+    studentEmail = email;
+  } else if (rawTarget) {
+    const { data: student } = await supabase.from("profiles").select("email").eq("id", rawTarget).single();
+    if (!student) return { error: "Aluno não encontrado." };
+    studentId = rawTarget;
+    studentEmail = student.email;
   }
 
   const { data: rec, error: insertError } = await supabase
     .from("recommendations")
     .insert({
       teacher_id: profile.id,
-      student_id: studentId || null,
+      student_id: studentId,
+      roster_email: rosterEmail,
       course_id: courseId,
       constructo,
       title,

@@ -72,6 +72,15 @@ export async function GET(request: Request) {
         { onConflict: "course_id,student_id", ignoreDuplicates: true }
       );
     }
+
+    // Reconcilia sugestões enviadas por e-mail antes deste aluno ter logado
+    // (roster_email, sem student_id ainda) — passam a aparecer no histórico
+    // dele dentro do app a partir de agora.
+    await admin
+      .from("recommendations")
+      .update({ student_id: user.id, roster_email: null })
+      .eq("roster_email", user.email)
+      .is("student_id", null);
   }
 
   const destination = finalRole === "professor" ? "/professor/dashboard" : "/aluno/questionario";

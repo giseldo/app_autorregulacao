@@ -40,31 +40,31 @@ export default async function EnviarSugestaoPage({
     supabase.from("recommendation_templates").select("*").order("id", { ascending: true }),
   ]);
 
-  // Só quem já logou no app (tem profile) pode receber sugestão individual —
-  // sem isso não existe um profiles.id para gravar em recommendations.student_id.
-  // Alunos que só sincronizaram do Classroom ainda são alcançados pela opção
-  // "toda a turma" (publica no Classroom independente de login no app).
+  // Aluno que ainda não logou no app (sem profile) também pode receber
+  // sugestão individual: usamos o e-mail do roster do Classroom como alvo
+  // (prefixo "email:") em vez de profiles.id — publica no Classroom por
+  // e-mail e fica pendente de reconciliação com o histórico do app até ele
+  // logar pela 1ª vez (ver app/auth/callback/route.ts).
   const pendingCount = students.filter((s) => !s.profile).length;
 
-  const studentOptions: StudentOption[] = students
-    .filter((s) => s.profile !== null)
-    .map((s) => {
-      const lowConstructs = s.latest
-        ? ALL_CONSTRUCTS.filter((c) => {
-            const v = s.latest!.scores[c.constructo];
-            if (v == null) return false;
-            return c.invertido ? v >= course.limite : v < course.limite;
-          }).map((c) => `${c.icon} ${c.label}`)
-        : [];
+  const studentOptions: StudentOption[] = students.map((s) => {
+    const lowConstructs = s.latest
+      ? ALL_CONSTRUCTS.filter((c) => {
+          const v = s.latest!.scores[c.constructo];
+          if (v == null) return false;
+          return c.invertido ? v >= course.limite : v < course.limite;
+        }).map((c) => `${c.icon} ${c.label}`)
+      : [];
 
-      return {
-        id: s.profile!.id,
-        name: s.name,
-        email: s.email,
-        overallScore: s.overallScore,
-        lowConstructs,
-      };
-    });
+    return {
+      id: s.profile ? s.profile.id : `email:${s.email}`,
+      name: s.name,
+      email: s.email,
+      overallScore: s.overallScore,
+      lowConstructs,
+      hasLogin: s.profile !== null,
+    };
+  });
 
   return (
     <>
@@ -78,8 +78,9 @@ export default async function EnviarSugestaoPage({
         <div className="alert alert-info">
           <span>ℹ️</span>
           <div>
-            {pendingCount} aluno(s) da turma ainda não fizeram o primeiro login no app e por isso não aparecem
-            para envio individual — a opção &quot;toda a turma&quot; alcança todo mundo, independente de login.
+            {pendingCount} aluno(s) da turma ainda não fizeram o primeiro login no app (marcados com ⏳ na lista) —
+            dá pra enviar sugestão individual mesmo assim, publicada no Classroom por e-mail; ela só passa a
+            aparecer no histórico dentro do app depois que o aluno logar pela 1ª vez.
           </div>
         </div>
       )}

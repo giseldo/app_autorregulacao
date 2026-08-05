@@ -86,6 +86,8 @@ export type Recommendation = {
   id: string;
   teacher_id: string;
   student_id: string | null;
+  /** E-mail de destino quando o alvo é um aluno do roster sem login/profile ainda. */
+  roster_email: string | null;
   course_id: string;
   constructo: string | null;
   title: string;

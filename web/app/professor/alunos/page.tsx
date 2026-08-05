@@ -113,7 +113,12 @@ export default async function AlunosPage() {
                           </Link>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted">Aguardando 1º login</span>
+                        <Link
+                          href={`/professor/enviar-sugestao?student_id=email:${encodeURIComponent(s.email)}`}
+                          className="btn btn-primary btn-sm"
+                        >
+                          Sugestão
+                        </Link>
                       )}
                     </td>
                   </tr>

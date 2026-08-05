@@ -10,6 +10,7 @@ export interface StudentOption {
   email: string;
   overallScore: number | null;
   lowConstructs: string[];
+  hasLogin: boolean;
 }
 
 export function SendRecommendationForm({
@@ -65,7 +66,7 @@ export function SendRecommendationForm({
                   <option value="">📢 Todos os alunos da turma</option>
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name}
+                      {s.hasLogin ? s.name : `⏳ ${s.name} (ainda não logou)`}
                     </option>
                   ))}
                 </select>
@@ -87,9 +88,11 @@ export function SendRecommendationForm({
                     /7
                     <br />
                     <span className="text-xs">
-                      {selectedStudent.lowConstructs.length > 0
-                        ? `Baixos: ${selectedStudent.lowConstructs.join(", ")}`
-                        : "Todos os construtos satisfatórios."}
+                      {selectedStudent.hasLogin
+                        ? selectedStudent.lowConstructs.length > 0
+                          ? `Baixos: ${selectedStudent.lowConstructs.join(", ")}`
+                          : "Todos os construtos satisfatórios."
+                        : "⏳ Ainda não logou no app — sem dados de MSLQ, mas a sugestão é publicada no Classroom normalmente."}
                     </span>
                   </div>
                 </div>
