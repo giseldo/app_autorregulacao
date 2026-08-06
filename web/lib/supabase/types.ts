@@ -103,6 +103,15 @@ export type RecommendationRead = {
   read_at: string;
 };
 
+export type LlmSettingsRow = {
+  id: true;
+  provider: string;
+  model: string;
+  api_key: string | null;
+  updated_at: string;
+  updated_by: string | null;
+};
+
 type Table<Row, Insert, Update = Partial<Insert>> = {
   Row: Row;
   Insert: Insert;
@@ -134,6 +143,7 @@ export type Database = {
         RecommendationRead,
         Partial<RecommendationRead> & { recommendation_id: string; student_id: string }
       >;
+      llm_settings: Table<LlmSettingsRow, Partial<LlmSettingsRow> & { id: true }>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

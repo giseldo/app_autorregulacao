@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { chatWithGroq, GroqNotConfiguredError, type ChatMessage } from "@/lib/groq";
+import { chatWithLlm, LlmNotConfiguredError, type ChatMessage } from "@/lib/llm";
 
 const SYSTEM_PROMPT: Record<"aluno" | "professor", string> = {
   aluno:
@@ -34,13 +34,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const reply = await chatWithGroq([
+    const reply = await chatWithLlm([
       { role: "system", content: SYSTEM_PROMPT[profile.role as "aluno" | "professor"] },
       ...messages.slice(-12),
     ]);
     return NextResponse.json({ reply });
   } catch (e) {
-    const status = e instanceof GroqNotConfiguredError ? 503 : 500;
+    const status = e instanceof LlmNotConfiguredError ? 503 : 500;
     return NextResponse.json({ error: e instanceof Error ? e.message : "Erro desconhecido." }, { status });
   }
 }

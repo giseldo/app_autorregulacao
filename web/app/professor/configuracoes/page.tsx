@@ -1,11 +1,13 @@
 import { requireProfile } from "@/lib/auth";
 import { getActiveCourse } from "@/lib/professorData";
+import { getLlmSettingsPublic } from "@/lib/llm";
+import { LlmSettingsForm } from "@/components/LlmSettingsForm";
 import { AutoTipTestButton } from "@/components/AutoTipTestButton";
 
 export default async function ConfiguracoesPage() {
   const { profile } = await requireProfile("professor");
   const course = await getActiveCourse(profile.id);
-  const groqConfigured = !!process.env.GROQ_API_KEY;
+  const llmSettings = await getLlmSettingsPublic();
 
   return (
     <>
@@ -16,31 +18,18 @@ export default async function ConfiguracoesPage() {
 
       <div className="card mb-4">
         <div className="card-header">
-          <h3>Chatbot (Groq)</h3>
+          <h3>Chatbot (modelo LLM)</h3>
         </div>
         <div className="card-body">
-          <p className="text-sm">
-            O botão de chat 💬 no canto da tela (visível para aluno e professor) é respondido pela API da{" "}
-            <strong>Groq</strong>. A chave fica só no servidor, configurada via variável de ambiente — não dá
-            para editar por aqui por segurança.
+          <p className="text-sm mb-3">
+            O botão de chat 💬 no canto da tela (visível para aluno e professor) é respondido pelo provedor e
+            modelo escolhidos aqui. Vale pra turma toda — é uma configuração única do app, não por professor.
           </p>
-          <div className={`alert ${groqConfigured ? "alert-success" : "alert-warning"} mt-3`}>
-            <span>{groqConfigured ? "✅" : "⚠️"}</span>
-            <div>
-              {groqConfigured ? (
-                "GROQ_API_KEY configurada — o chatbot está ativo."
-              ) : (
-                <>
-                  <strong>GROQ_API_KEY</strong> não configurada. Crie uma chave em{" "}
-                  <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
-                    console.groq.com/keys
-                  </a>{" "}
-                  e adicione como variável de ambiente do projeto (<code>web/.env.local</code> local, ou nas
-                  Environment Variables do Vercel em produção) — depois faça um novo deploy.
-                </>
-              )}
-            </div>
-          </div>
+          <LlmSettingsForm
+            initialProvider={llmSettings.provider}
+            initialModel={llmSettings.model}
+            hasApiKey={llmSettings.hasApiKey}
+          />
         </div>
       </div>
 
