@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
 import type { Profile } from "@/lib/supabase/types";
 import { SidebarNav, type NavItem } from "./SidebarNav";
+import { Chatbot } from "./Chatbot";
 
 function initialsOf(name: string) {
   return name
@@ -55,6 +56,7 @@ export function AppShell({
         </div>
       </nav>
       <main className="main-content">{children}</main>
+      <Chatbot role={isTeacher ? "professor" : "aluno"} />
     </div>
   );
 }

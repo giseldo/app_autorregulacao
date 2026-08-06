@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getActiveCourse } from "@/lib/professorData";
 import {
   getTeacherAccessToken,
   listCourses,
@@ -176,4 +177,59 @@ export async function sendRecommendation(_prev: ActionState, formData: FormData)
   }
 
   return { success: "Sugestão enviada e publicada no Google Classroom!" };
+}
+
+// Conteúdo fixo só para validar o mecanismo de "dica automática" do chatbot
+// (recommendations.auto = true) antes de existir um agendamento de verdade —
+// ver lib/groq.ts / components/Chatbot.tsx.
+const AUTO_TIP_TITLE = "Dica automática do NeoAVA-ARA (teste)";
+const AUTO_TIP_CONTENT =
+  "Experimente a técnica Pomodoro: estude por 25 minutos com foco total e faça uma pausa de 5 minutos. " +
+  "Repetir esse ciclo ajuda a manter a concentração e reduzir a procrastinação. 🍅";
+
+export async function sendAutoTip(_prev: ActionState, _formData: FormData): Promise<ActionState> {
+  const { profile } = await requireProfile("professor");
+  const supabase = await createClient();
+
+  const course = await getActiveCourse(profile.id);
+  if (!course) return { error: "Sincronize uma turma antes de testar a dica automática." };
+
+  const { data: rec, error: insertError } = await supabase
+    .from("recommendations")
+    .insert({
+      teacher_id: profile.id,
+      student_id: null,
+      roster_email: null,
+      course_id: course.id,
+      constructo: null,
+      title: AUTO_TIP_TITLE,
+      content: AUTO_TIP_CONTENT,
+      auto: true,
+    })
+    .select("id")
+    .single();
+
+  if (insertError || !rec) {
+    return { error: insertError?.message ?? "Falha ao salvar a dica automática." };
+  }
+
+  try {
+    const token = await getTeacherAccessToken(profile.id);
+    const material = await createCourseWorkMaterial(token, course.google_course_id, {
+      title: AUTO_TIP_TITLE,
+      description: AUTO_TIP_CONTENT,
+    });
+    await supabase
+      .from("recommendations")
+      .update({ classroom_courseworkmaterial_id: material.id })
+      .eq("id", rec.id);
+  } catch (e) {
+    return {
+      success:
+        "Dica automática (teste) salva no app, mas não foi possível publicar no Google Classroom: " +
+        (e instanceof Error ? e.message : "erro desconhecido"),
+    };
+  }
+
+  return { success: "Dica automática (teste) enviada para toda a turma e publicada no Google Classroom!" };
 }

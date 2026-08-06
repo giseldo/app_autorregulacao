@@ -11,6 +11,7 @@ export default async function ProfessorLayout({ children }: { children: ReactNod
     { href: "/professor/alunos", icon: "👥", label: "Alunos" },
     { href: "/professor/enviar-sugestao", icon: "✉️", label: "Enviar Sugestão" },
     { href: "/professor/turma", icon: "🏫", label: "Turma" },
+    { href: "/professor/configuracoes", icon: "⚙️", label: "Configurações" },
   ];
 
   return (

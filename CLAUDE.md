@@ -26,9 +26,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+GROQ_API_KEY=
 ```
 
 `GOOGLE_CLIENT_ID`/`SECRET` must be the **same** OAuth Web Client configured in the Supabase dashboard (Authentication → Providers → Google) — the app needs them again directly because Supabase does not persist/refresh the Google `provider_token` after login; [lib/google/classroom.ts](web/lib/google/classroom.ts) exchanges the stored `refresh_token` for a fresh access token itself on every Classroom API call.
+
+`GROQ_API_KEY` (from [console.groq.com/keys](https://console.groq.com/keys)) powers the chat assistant in [lib/groq.ts](web/lib/groq.ts) / [app/api/chat/route.ts](web/app/api/chat/route.ts) — without it the chatbot returns a friendly "not configured" error instead of crashing. There's a status readout (configured or not) on `/professor/configuracoes`, which also has a button to test the "auto tip" mechanism (`recommendations.auto = true`, currently a fixed placeholder message — no real schedule wired up yet).
 
 Database schema/RLS/seed data live in [web/supabase/migrations/](web/supabase/migrations/) — run them against a Supabase project (SQL editor or `supabase db push`) in file order (`0001` → `0004`) before first use.
 
