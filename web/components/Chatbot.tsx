@@ -7,6 +7,11 @@ interface Message {
   content: string;
 }
 
+interface PromptMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
 const GREETING: Record<"aluno" | "professor", string> = {
   aluno: "Oi! 👋 Sou o assistente do NeoAVA-ARA. Posso te dar dicas de estudo e motivação. Como posso ajudar?",
   professor:
@@ -20,11 +25,23 @@ export function Chatbot({ role }: { role: "aluno" | "professor" }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [lastPrompt, setLastPrompt] = useState<PromptMessage[] | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages, open]);
+
+  useEffect(() => {
+    if (!open || lastPrompt) return;
+    fetch("/api/chat")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.systemPrompt) setLastPrompt([{ role: "system", content: json.systemPrompt }]);
+      })
+      .catch(() => {});
+  }, [open, lastPrompt]);
 
   async function send() {
     const text = input.trim();
@@ -43,6 +60,7 @@ export function Chatbot({ role }: { role: "aluno" | "professor" }) {
         body: JSON.stringify({ messages: next }),
       });
       const json = await res.json();
+      if (json.promptSent) setLastPrompt(json.promptSent);
       if (!res.ok) throw new Error(json.error ?? "Falha ao falar com o chatbot.");
       setMessages([...next, { role: "assistant", content: json.reply }]);
     } catch (e) {
@@ -104,10 +122,57 @@ export function Chatbot({ role }: { role: "aluno" | "professor" }) {
               color: "#fff",
               fontWeight: 600,
               fontSize: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
             }}
           >
-            🤖 Assistente NeoAVA-ARA
+            <span>🤖 Assistente NeoAVA-ARA</span>
+            <button
+              type="button"
+              onClick={() => setShowPrompt((v) => !v)}
+              title="Ver prompt enviado ao modelo"
+              aria-label="Ver prompt enviado ao modelo"
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.6)",
+                borderRadius: 6,
+                color: "#fff",
+                fontSize: 11,
+                padding: "2px 6px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {showPrompt ? "Ocultar prompt" : "Ver prompt"}
+            </button>
           </div>
+
+          {showPrompt && (
+            <div
+              style={{
+                maxHeight: 160,
+                overflowY: "auto",
+                padding: 10,
+                borderBottom: "1px solid var(--border)",
+                background: "var(--bg)",
+                fontFamily: "monospace",
+                fontSize: 11,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {lastPrompt ? (
+                lastPrompt.map((m, i) => (
+                  <div key={i} style={{ marginBottom: 6 }}>
+                    <strong>[{m.role}]</strong> {m.content}
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: "var(--text-muted)" }}>Carregando prompt…</div>
+              )}
+            </div>
+          )}
 
           <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
             {messages.map((m, i) => (

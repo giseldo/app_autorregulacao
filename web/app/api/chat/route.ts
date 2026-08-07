@@ -17,6 +17,20 @@ const SYSTEM_PROMPT: Record<"aluno" | "professor", string> = {
     "forma objetiva.",
 };
 
+export async function GET() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!profile?.role) return NextResponse.json({ error: "Perfil não encontrado." }, { status: 401 });
+
+  return NextResponse.json({ systemPrompt: SYSTEM_PROMPT[profile.role as "aluno" | "professor"] });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -33,14 +47,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Mensagem vazia." }, { status: 400 });
   }
 
+  const promptSent: ChatMessage[] = [
+    { role: "system", content: SYSTEM_PROMPT[profile.role as "aluno" | "professor"] },
+    ...messages.slice(-12),
+  ];
+
   try {
-    const reply = await chatWithLlm([
-      { role: "system", content: SYSTEM_PROMPT[profile.role as "aluno" | "professor"] },
-      ...messages.slice(-12),
-    ]);
-    return NextResponse.json({ reply });
+    const reply = await chatWithLlm(promptSent);
+    return NextResponse.json({ reply, promptSent });
   } catch (e) {
     const status = e instanceof LlmNotConfiguredError ? 503 : 500;
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Erro desconhecido." }, { status });
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Erro desconhecido.", promptSent }, { status });
   }
 }
