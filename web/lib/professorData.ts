@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { scoreConstructs, ALL_CONSTRUCTS } from "@/lib/mslq";
-import type { Profile, MslqApplication, MslqQuestion, Course } from "@/lib/supabase/types";
+import type { Profile, MslqApplication, MslqQuestion, Course, MslqRound } from "@/lib/supabase/types";
 
 export interface StudentOverview {
   /** null = aluno ainda não fez o primeiro login (do course_roster, ou só
@@ -13,6 +13,18 @@ export interface StudentOverview {
   latest: { application: MslqApplication; scores: Record<string, number> } | null;
   /** Média de todos os construtos (Ansiedade invertida) — um único número de "risco". */
   overallScore: number | null;
+  /** Última aplicação de cada rodada da pesquisa (pré-teste/pós-teste/3ª aplicação),
+   * usada para mostrar a evolução do aluno ao longo do tempo, não só a foto atual. */
+  byRound: Partial<Record<MslqRound, { application: MslqApplication; scores: Record<string, number>; overallScore: number }>>;
+}
+
+function overallOf(scores: Record<string, number>): number {
+  const normalized = ALL_CONSTRUCTS.map((c) => {
+    const v = scores[c.constructo];
+    if (v == null) return null;
+    return c.invertido ? 8 - v : v;
+  }).filter((v): v is number => v !== null);
+  return normalized.length ? normalized.reduce((a, b) => a + b, 0) / normalized.length : 0;
 }
 
 /** Turma "ativa" do professor = a mais recentemente sincronizada. Simplificação
@@ -30,6 +42,18 @@ export async function getActiveCourse(teacherId: string): Promise<Course | null>
   return data ?? null;
 }
 
+function scoresFor(
+  application: MslqApplication,
+  questions: MslqQuestion[],
+  answers: { application_id: string; id_questao: string; valor: number }[]
+): Record<string, number> {
+  const answersMap: Record<string, number> = {};
+  for (const a of answers) {
+    if (a.application_id === application.id) answersMap[a.id_questao] = a.valor;
+  }
+  return scoreConstructs(questions, answersMap);
+}
+
 function summarize(
   apps: MslqApplication[],
   questions: MslqQuestion[],
@@ -41,27 +65,23 @@ function summarize(
   const applicationsCount = apps.length;
   const last = apps[apps.length - 1] ?? null;
 
+  const byRound: StudentOverview["byRound"] = {};
+  for (const round of ["pre", "pos", "extra"] as MslqRound[]) {
+    const matches = apps.filter((a) => a.round === round);
+    const application = matches[matches.length - 1];
+    if (!application) continue;
+    const scores = scoresFor(application, questions, answers);
+    byRound[round] = { application, scores, overallScore: overallOf(scores) };
+  }
+
   if (!last) {
-    return { profile, name, email, applicationsCount, latest: null, overallScore: null };
+    return { profile, name, email, applicationsCount, latest: null, overallScore: null, byRound };
   }
 
-  const answersMap: Record<string, number> = {};
-  for (const a of answers) {
-    if (a.application_id === last.id) answersMap[a.id_questao] = a.valor;
-  }
-  const scores = scoreConstructs(questions, answersMap);
+  const scores = scoresFor(last, questions, answers);
+  const overallScore = overallOf(scores);
 
-  const normalized = ALL_CONSTRUCTS.map((c) => {
-    const v = scores[c.constructo];
-    if (v == null) return null;
-    return c.invertido ? 8 - v : v;
-  }).filter((v): v is number => v !== null);
-
-  const overallScore = normalized.length
-    ? normalized.reduce((a, b) => a + b, 0) / normalized.length
-    : null;
-
-  return { profile, name, email, applicationsCount, latest: { application: last, scores }, overallScore };
+  return { profile, name, email, applicationsCount, latest: { application: last, scores }, overallScore, byRound };
 }
 
 export async function getCourseOverview(

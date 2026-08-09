@@ -13,6 +13,11 @@ function initialsOf(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
 }
 
+function avg(values: (number | null | undefined)[]): number {
+  const nums = values.filter((v): v is number => v != null);
+  return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+}
+
 export default async function DashboardPage() {
   const { profile } = await requireProfile("professor");
   const course = await getActiveCourse(profile.id);
@@ -44,6 +49,46 @@ export default async function DashboardPage() {
     ? withData.reduce((acc, s) => acc + (s.overallScore ?? 0), 0) / withData.length
     : 0;
   const atRisk = withData.filter((s) => (s.overallScore ?? 0) < course.limite);
+
+  // O perfil de autorregulação não é uma foto única: já foram enviadas duas
+  // medidas (pré-teste, antes da recomendação, e pós-teste, depois) — aqui
+  // isolamos quem respondeu as duas pra mostrar se a turma evoluiu ou não.
+  const withBothRounds = students.filter((s) => s.byRound.pre && s.byRound.pos);
+  const THRESHOLD = 0.05;
+  const evolucao = withBothRounds.map((s) => ({
+    student: s,
+    diff: s.byRound.pos!.overallScore - s.byRound.pre!.overallScore,
+  }));
+  const melhoraram = evolucao.filter((e) => e.diff > THRESHOLD);
+  const pioraram = evolucao.filter((e) => e.diff < -THRESHOLD);
+  const estaveis = evolucao.length - melhoraram.length - pioraram.length;
+
+  const prePosBarData = {
+    labels: ALL_CONSTRUCTS.map((c) => `${c.icon} ${c.label}`),
+    datasets: [
+      {
+        label: "Pré-teste",
+        data: ALL_CONSTRUCTS.map((c) =>
+          Number(avg(withBothRounds.map((s) => s.byRound.pre!.scores[c.constructo])).toFixed(2))
+        ),
+        backgroundColor: "#94A3B8CC",
+        borderRadius: 6,
+      },
+      {
+        label: "Pós-teste",
+        data: ALL_CONSTRUCTS.map((c) =>
+          Number(avg(withBothRounds.map((s) => s.byRound.pos!.scores[c.constructo])).toFixed(2))
+        ),
+        backgroundColor: "#4F46E5CC",
+        borderRadius: 6,
+      },
+    ],
+  };
+  const prePosBarOptions = {
+    indexAxis: "y" as const,
+    scales: { x: { min: 1, max: 7, ticks: { stepSize: 1 } } },
+    plugins: { legend: { position: "bottom" as const } },
+  };
 
   const radarData = {
     labels: ALL_CONSTRUCTS.map((c) => c.label),
@@ -150,10 +195,42 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3>Antes × Depois — Evolução da turma (Pré-teste → Pós-teste)</h3>
+          <span className="text-xs text-muted">{withBothRounds.length} aluno(s) com as duas medidas</span>
+        </div>
+        <div className="card-body">
+          {withBothRounds.length === 0 ? (
+            <p className="text-sm text-muted">
+              Ainda não há alunos com pré-teste e pós-teste registrados para comparar a evolução.
+            </p>
+          ) : (
+            <>
+              <div className="flex gap-4 mb-4" style={{ flexWrap: "wrap" }}>
+                <div className="delta delta-up" style={{ fontSize: 13 }}>
+                  🔺 {melhoraram.length} melhoraram
+                </div>
+                <div className="delta delta-down" style={{ fontSize: 13 }}>
+                  🔻 {pioraram.length} pioraram
+                </div>
+                <div className="delta text-muted" style={{ fontSize: 13 }}>
+                  ▪️ {estaveis} estáveis
+                </div>
+              </div>
+              <div className="chart-container" style={{ height: 320 }}>
+                <BarChart data={prePosBarData} options={prePosBarOptions} />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className="grid-2 mb-4">
         <div className="card">
           <div className="card-header">
             <h3>Radar — Perfil de Autorregulação (turma)</h3>
+            <span className="text-xs text-muted">última aplicação de cada aluno</span>
           </div>
           <div className="card-body">
             <div className="chart-container">
@@ -173,6 +250,8 @@ export default async function DashboardPage() {
             {students.map((s) => {
               const score = s.overallScore;
               const cls = score == null ? "score-low" : score >= course.limite ? "score-high" : "score-low";
+              const bothRounds = s.byRound.pre && s.byRound.pos;
+              const diff = bothRounds ? s.byRound.pos!.overallScore - s.byRound.pre!.overallScore : null;
               const content = (
                 <>
                   <div className="avatar avatar-student" style={{ width: 30, height: 30, fontSize: 11 }}>
@@ -188,6 +267,12 @@ export default async function DashboardPage() {
                         ? `${s.applicationsCount} aplicação(ões)${s.latest ? ` · ${fmtDate(s.latest.application.applied_at)}` : ""}`
                         : "Sem respostas ainda"}
                     </div>
+                    {diff != null && (
+                      <div className={diff > THRESHOLD ? "delta-up" : diff < -THRESHOLD ? "delta-down" : "text-muted"} style={{ fontSize: 11 }}>
+                        {diff > THRESHOLD ? "🔺" : diff < -THRESHOLD ? "🔻" : "▪️"} pré→pós {diff > 0 ? "+" : ""}
+                        {diff.toFixed(1)}
+                      </div>
+                    )}
                   </div>
                   <span className={`score-badge ${cls}`}>{score != null ? score.toFixed(1) : "—"}</span>
                 </>

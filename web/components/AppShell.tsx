@@ -16,10 +16,13 @@ function initialsOf(name: string) {
 export function AppShell({
   profile,
   navItems,
+  courseName,
   children,
 }: {
   profile: Profile;
   navItems: NavItem[];
+  /** Turma do Google Classroom em uso, mostrada no topo da sidebar. */
+  courseName?: string | null;
   children: ReactNode;
 }) {
   const isTeacher = profile.role === "professor";
@@ -30,6 +33,7 @@ export function AppShell({
         <div className="sidebar-header">
           <div className="sidebar-logo">NeoAVA-ARA</div>
           <div className="sidebar-role">{isTeacher ? "Professor(a)" : "Aluno(a)"}</div>
+          {courseName && <div className="sidebar-course">🏫 {courseName}</div>}
         </div>
         <div className="sidebar-user">
           <div className={`avatar avatar-${isTeacher ? "teacher" : "student"}`}>

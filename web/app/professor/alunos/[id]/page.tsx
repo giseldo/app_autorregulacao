@@ -37,20 +37,25 @@ export default async function AlunoDetailPage({ params }: { params: Promise<{ id
   let recs: Recommendation[] | null;
 
   if (rosterEmail) {
-    const { data: roster } = await supabase
-      .from("course_roster")
-      .select("*")
-      .eq("email", rosterEmail)
-      .maybeSingle();
-    if (!roster) notFound();
-    const { data: course } = await supabase.from("courses").select("limite").eq("id", roster.course_id).maybeSingle();
-    limite = course?.limite ?? 4;
-    student = { id: null, name: roster.name, email: roster.email };
-
-    [{ data: applications }, { data: recs }] = await Promise.all([
+    // Nem todo respondente importado por e-mail está no course_roster (ex:
+    // e-mail usado no Google Forms não bate com o e-mail sincronizado do
+    // Classroom) — sem esse fallback, clicar num aluno desses dava 404.
+    const [{ data: roster }, applicationsResult, recsResult] = await Promise.all([
+      supabase.from("course_roster").select("*").eq("email", rosterEmail).maybeSingle(),
       supabase.from("mslq_applications").select("*").eq("roster_email", rosterEmail).order("applied_at", { ascending: true }),
       supabase.from("recommendations").select("*").eq("roster_email", rosterEmail).order("created_at", { ascending: false }),
     ]);
+    applications = applicationsResult.data;
+    recs = recsResult.data;
+
+    if (!roster && !applications?.length) notFound();
+
+    const courseId = roster?.course_id ?? applications?.[0]?.course_id ?? null;
+    if (courseId) {
+      const { data: course } = await supabase.from("courses").select("limite").eq("id", courseId).maybeSingle();
+      limite = course?.limite ?? 4;
+    }
+    student = { id: null, name: roster?.name ?? applications?.[0]?.roster_name ?? rosterEmail, email: rosterEmail };
   } else {
     const { data: profile } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
     if (!profile) notFound();

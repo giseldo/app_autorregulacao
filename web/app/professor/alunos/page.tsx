@@ -54,6 +54,7 @@ export default async function AlunosPage() {
                 ))}
                 <th>Média</th>
                 <th>Status</th>
+                <th title="Variação entre pré-teste e pós-teste">Evolução</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -61,6 +62,8 @@ export default async function AlunosPage() {
               {students.map((s) => {
                 const score = s.overallScore;
                 const avgCls = score == null ? "score-low" : score >= course.limite ? "score-high" : "score-low";
+                const bothRounds = s.byRound.pre && s.byRound.pos;
+                const diff = bothRounds ? s.byRound.pos!.overallScore - s.byRound.pre!.overallScore : null;
                 return (
                   <tr key={s.email} style={s.profile || s.applicationsCount > 0 ? undefined : { opacity: 0.7 }}>
                     <td>
@@ -98,6 +101,16 @@ export default async function AlunosPage() {
                         <span className="score-badge score-low">⚠️ Em risco</span>
                       ) : (
                         <span className="score-badge score-high">✅ OK</span>
+                      )}
+                    </td>
+                    <td>
+                      {diff == null ? (
+                        <span className="text-xs text-muted">—</span>
+                      ) : (
+                        <span className={diff > 0.05 ? "delta-up" : diff < -0.05 ? "delta-down" : "text-muted"} style={{ fontWeight: 700, fontSize: 12 }}>
+                          {diff > 0.05 ? "🔺" : diff < -0.05 ? "🔻" : "▪️"} {diff > 0 ? "+" : ""}
+                          {diff.toFixed(1)}
+                        </span>
                       )}
                     </td>
                     <td>
