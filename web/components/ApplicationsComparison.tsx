@@ -16,9 +16,12 @@ export type ScoredApplication = { application: MslqApplication; scores: Record<s
  */
 export async function ApplicationsComparison({
   studentId,
+  rosterEmail,
   scoresByApplication,
 }: {
-  studentId: string;
+  studentId: string | null;
+  /** E-mail do aluno quando ele ainda não tem profile (dados importados). */
+  rosterEmail?: string | null;
   scoresByApplication: ScoredApplication[];
 }) {
   if (scoresByApplication.length < 2) return null;
@@ -30,7 +33,10 @@ export async function ApplicationsComparison({
     .order("created_at", { ascending: true });
 
   const relevantRecs = (recs ?? []).filter(
-    (r) => r.student_id === studentId || r.student_id === null
+    (r) =>
+      (studentId !== null && r.student_id === studentId) ||
+      (!!rosterEmail && r.roster_email === rosterEmail) ||
+      r.student_id === null
   ) as Recommendation[];
 
   const pairs: [ScoredApplication, ScoredApplication][] = [];

@@ -1,101 +1,55 @@
-// Definições e cálculo de score dos 13 construtos do MSLQ.
-// Textos de ajuda portados de pages/03_Perfil.py do Streamlit.
+// Definições e cálculo de score dos 6 construtos do instrumento de
+// autorregulação usado no experimento (34 itens — ver migration
+// 0008_construct_model_autorregulacao.sql). Nenhum item deste instrumento é
+// de pontuação invertida.
 
 export interface ConstructDef {
   constructo: string;
   label: string;
   icon: string;
   help: string;
-  /** true = pontuação ALTA é ruim (só se aplica a Ansiedade em Testes) */
+  /** true = pontuação ALTA é ruim. Nenhum construto deste instrumento é invertido. */
   invertido?: boolean;
 }
 
-export const MOTIVACAO_CONSTRUCTS: ConstructDef[] = [
+export const ALL_CONSTRUCTS: ConstructDef[] = [
   {
-    constructo: "Orientação a Metas Intrínsecas",
-    label: "Orientação a Metas Intrínsecas",
+    constructo: "Motivação",
+    label: "Motivação",
     icon: "🎯",
-    help: "Grau em que o aluno participa de uma tarefa por razões como desafio, curiosidade e domínio do conteúdo.",
+    help: "Confiança e disposição do aluno para concluir as atividades da disciplina e definir metas de estudo.",
   },
   {
-    constructo: "Orientação a Metas Extrínsecas",
-    label: "Orientação a Metas Extrínsecas",
-    icon: "🏆",
-    help: "Grau em que o aluno participa de uma tarefa por razões como notas, recompensas, desempenho e competição.",
-  },
-  {
-    constructo: "Valorização da Atividade",
-    label: "Valorização da Atividade",
-    icon: "💡",
-    help: "Avaliação do aluno sobre quão interessante, importante e útil é a atividade (diferente de por que ele participa dela).",
-  },
-  {
-    constructo: "Controle do Aprendizado",
-    label: "Controle do Aprendizado",
-    icon: "🎛️",
-    help: "Crença do aluno de que seus próprios esforços para aprender resultarão em resultados positivos.",
-  },
-  {
-    constructo: "Autoeficácia para Aprendizado",
-    label: "Autoeficácia para Aprendizado",
-    icon: "💪",
-    help: "Autoavaliação da capacidade de dominar o conteúdo e expectativa de bom desempenho na disciplina.",
-  },
-  {
-    constructo: "Ansiedade em Testes",
-    label: "Ansiedade em Testes",
-    icon: "😰",
-    help: "Quanto o aluno se preocupa com avaliações e se distrai durante uma prova. Ao contrário dos demais construtos, aqui pontuação ALTA indica mais ansiedade — não é um resultado positivo.",
-    invertido: true,
-  },
-];
-
-export const ESTRATEGIA_CONSTRUCTS: ConstructDef[] = [
-  {
-    constructo: "Ensaio (memorização)",
-    label: "Ensaio (Memorização)",
-    icon: "📝",
-    help: "Uso de estratégias como releitura de anotações e memorização repetida de listas e conceitos-chave.",
-  },
-  {
-    constructo: "Elaboração",
-    label: "Elaboração",
-    icon: "🔗",
-    help: "Resumir ou parafrasear o conteúdo com as próprias palavras e relacioná-lo com o que já se sabe.",
-  },
-  {
-    constructo: "Organização",
-    label: "Organização",
-    icon: "🗂️",
-    help: "Capacidade de selecionar as ideias principais de um texto e organizar o que precisa ser aprendido.",
-  },
-  {
-    constructo: "Pensamento Crítico",
-    label: "Pensamento Crítico",
-    icon: "🧩",
-    help: "Colocar ideias importantes nas próprias palavras ao estudar, em vez de apenas memorizá-las.",
-  },
-  {
-    constructo: "Autorregulação Metacognitiva",
-    label: "Autorregulação Metacognitiva",
+    constructo: "Metacognição",
+    label: "Metacognição",
     icon: "🧠",
-    help: "Frequência com que o aluno planeja, monitora e ajusta a própria leitura e estudo.",
+    help: "Frequência com que o aluno planeja, monitora a própria compreensão e ajusta a forma de estudar.",
   },
   {
-    constructo: "Tempo e Ambiente de Estudo",
-    label: "Tempo e Ambiente de Estudo",
-    icon: "⏰",
-    help: "Administração da agenda de estudo e uso de um ambiente adequado para concentração.",
+    constructo: "Estratégias de Aprendizado",
+    label: "Estratégias de Aprendizado",
+    icon: "📚",
+    help: "Uso de resumos, mapas mentais, diferentes recursos e revisão regular do material estudado.",
   },
   {
-    constructo: "Administração de Esforços",
-    label: "Administração de Esforços",
+    constructo: "Autocontrole Emocional",
+    label: "Autocontrole Emocional",
+    icon: "😌",
+    help: "Capacidade de gerenciar estresse, manter a calma e lidar com frustração diante de dificuldades.",
+  },
+  {
+    constructo: "Ambiente de Estudo",
+    label: "Ambiente de Estudo",
+    icon: "🏡",
+    help: "Organização do ambiente, cronograma e materiais de estudo, e busca de ajuda quando necessário.",
+  },
+  {
+    constructo: "Autonomia e Autodisciplina",
+    label: "Autonomia e Autodisciplina",
     icon: "💪",
-    help: "Disposição para persistir nas tarefas de estudo mesmo quando o material é difícil ou desinteressante.",
+    help: "Responsabilidade do aluno pelo próprio progresso: decidir, avaliar e ajustar seu processo de aprendizagem.",
   },
 ];
-
-export const ALL_CONSTRUCTS: ConstructDef[] = [...MOTIVACAO_CONSTRUCTS, ...ESTRATEGIA_CONSTRUCTS];
 
 export function constructDef(constructo: string): ConstructDef | undefined {
   return ALL_CONSTRUCTS.find((c) => c.constructo === constructo);

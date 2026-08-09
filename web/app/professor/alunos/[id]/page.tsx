@@ -2,16 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import {
-  ALL_CONSTRUCTS,
-  MOTIVACAO_CONSTRUCTS,
-  ESTRATEGIA_CONSTRUCTS,
-  scoreConstructs,
-  statusFor,
-} from "@/lib/mslq";
+import { ALL_CONSTRUCTS, scoreConstructs, statusFor } from "@/lib/mslq";
 import { RadarChart } from "@/components/charts/RadarChart";
 import { LineChart } from "@/components/charts/LineChart";
 import { ApplicationsComparison, type ScoredApplication } from "@/components/ApplicationsComparison";
+import { PrePosComparison } from "@/components/PrePosComparison";
+import type { MslqApplication, Recommendation } from "@/lib/supabase/types";
 
 const PALETTE = [
   "#F59E0B", "#0EA5E9", "#8B5CF6", "#10B981", "#EF4444", "#EC4899", "#14B8A6",
@@ -30,22 +26,51 @@ export default async function AlunoDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: student } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
-  if (!student) notFound();
+  // "email:<endereco>" identifica um aluno que ainda não fez login no app
+  // (mesma convenção usada em enviar-sugestao?student_id=email:...) — os dados
+  // dele (importados de planilha) ficam em mslq_applications.roster_email.
+  const rosterEmail = id.startsWith("email:") ? decodeURIComponent(id.slice("email:".length)) : null;
 
-  const { data: enrollment } = await supabase
-    .from("enrollments")
-    .select("course_id, courses(limite)")
-    .eq("student_id", id)
-    .limit(1)
-    .maybeSingle();
-  const limite = (enrollment as unknown as { courses: { limite: number } | null } | null)?.courses?.limite ?? 4;
+  let student: { id: string | null; name: string; email: string };
+  let limite = 4;
+  let applications: MslqApplication[] | null;
+  let recs: Recommendation[] | null;
 
-  const [{ data: questions }, { data: applications }, { data: recs }] = await Promise.all([
-    supabase.from("mslq_questions").select("*"),
-    supabase.from("mslq_applications").select("*").eq("student_id", id).order("applied_at", { ascending: true }),
-    supabase.from("recommendations").select("*").eq("student_id", id).order("created_at", { ascending: false }),
-  ]);
+  if (rosterEmail) {
+    const { data: roster } = await supabase
+      .from("course_roster")
+      .select("*")
+      .eq("email", rosterEmail)
+      .maybeSingle();
+    if (!roster) notFound();
+    const { data: course } = await supabase.from("courses").select("limite").eq("id", roster.course_id).maybeSingle();
+    limite = course?.limite ?? 4;
+    student = { id: null, name: roster.name, email: roster.email };
+
+    [{ data: applications }, { data: recs }] = await Promise.all([
+      supabase.from("mslq_applications").select("*").eq("roster_email", rosterEmail).order("applied_at", { ascending: true }),
+      supabase.from("recommendations").select("*").eq("roster_email", rosterEmail).order("created_at", { ascending: false }),
+    ]);
+  } else {
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+    if (!profile) notFound();
+    student = { id: profile.id, name: profile.name, email: profile.email };
+
+    const { data: enrollment } = await supabase
+      .from("enrollments")
+      .select("course_id, courses(limite)")
+      .eq("student_id", id)
+      .limit(1)
+      .maybeSingle();
+    limite = (enrollment as unknown as { courses: { limite: number } | null } | null)?.courses?.limite ?? 4;
+
+    [{ data: applications }, { data: recs }] = await Promise.all([
+      supabase.from("mslq_applications").select("*").eq("student_id", id).order("applied_at", { ascending: true }),
+      supabase.from("recommendations").select("*").eq("student_id", id).order("created_at", { ascending: false }),
+    ]);
+  }
+
+  const { data: questions } = await supabase.from("mslq_questions").select("*");
 
   const appList = applications ?? [];
   const appIds = appList.map((a) => a.id);
@@ -66,9 +91,15 @@ export default async function AlunoDetailPage({ params }: { params: Promise<{ id
       <div className="page-header flex justify-between items-center">
         <div>
           <h2>{student.name}</h2>
-          <p>{student.email}</p>
+          <p>
+            {student.email}
+            {!student.id && <span className="text-xs text-muted"> · ⏳ ainda não fez login no app</span>}
+          </p>
         </div>
-        <Link href={`/professor/enviar-sugestao?student_id=${student.id}`} className="btn btn-primary">
+        <Link
+          href={`/professor/enviar-sugestao?student_id=${student.id ?? `email:${student.email}`}`}
+          className="btn btn-primary"
+        >
           ✉️ Enviar sugestão
         </Link>
       </div>
@@ -76,40 +107,36 @@ export default async function AlunoDetailPage({ params }: { params: Promise<{ id
       {scoresByApplication.length === 0 ? (
         <div className="empty-state">
           <div className="icon">📊</div>
-          <p>Este aluno ainda não respondeu o questionário MSLQ.</p>
+          <p>Este aluno ainda não tem respostas do questionário (nem pelo app, nem importadas).</p>
         </div>
       ) : (
         (() => {
           const last = scoresByApplication[scoresByApplication.length - 1];
           const labels = scoresByApplication.map((s) => fmtDate(s.application.applied_at));
 
-          function lineData(constructs: typeof MOTIVACAO_CONSTRUCTS) {
-            return {
-              labels,
-              datasets: constructs.map((c, i) => ({
-                label: c.label,
-                data: scoresByApplication.map((s) => Number((s.scores[c.constructo] ?? 0).toFixed(2))),
-                borderColor: PALETTE[i % PALETTE.length],
-                backgroundColor: PALETTE[i % PALETTE.length] + "22",
-                tension: 0.35,
-                pointRadius: 4,
-              })),
-            };
-          }
-          function radarData(constructs: typeof MOTIVACAO_CONSTRUCTS) {
-            return {
-              labels: constructs.map((c) => c.label),
-              datasets: [
-                {
-                  label: "Perfil atual",
-                  data: constructs.map((c) => Number((last.scores[c.constructo] ?? 0).toFixed(2))),
-                  backgroundColor: "rgba(79,70,229,.18)",
-                  borderColor: "#4F46E5",
-                  pointBackgroundColor: "#4F46E5",
-                },
-              ],
-            };
-          }
+          const lineData = {
+            labels,
+            datasets: ALL_CONSTRUCTS.map((c, i) => ({
+              label: c.label,
+              data: scoresByApplication.map((s) => Number((s.scores[c.constructo] ?? 0).toFixed(2))),
+              borderColor: PALETTE[i % PALETTE.length],
+              backgroundColor: PALETTE[i % PALETTE.length] + "22",
+              tension: 0.35,
+              pointRadius: 4,
+            })),
+          };
+          const radarData = {
+            labels: ALL_CONSTRUCTS.map((c) => c.label),
+            datasets: [
+              {
+                label: "Perfil atual",
+                data: ALL_CONSTRUCTS.map((c) => Number((last.scores[c.constructo] ?? 0).toFixed(2))),
+                backgroundColor: "rgba(79,70,229,.18)",
+                borderColor: "#4F46E5",
+                pointBackgroundColor: "#4F46E5",
+              },
+            ],
+          };
           const lineOptions = {
             scales: { y: { min: 1, max: 7, ticks: { stepSize: 1 } } },
             plugins: { legend: { position: "bottom" as const, labels: { boxWidth: 10, font: { size: 10 } } } },
@@ -121,26 +148,20 @@ export default async function AlunoDetailPage({ params }: { params: Promise<{ id
 
           return (
             <>
-              <div className="card mb-4">
-                <div className="card-header"><h3>Evolução — Escalas de Motivação</h3></div>
-                <div className="card-body"><div className="chart-container"><LineChart data={lineData(MOTIVACAO_CONSTRUCTS)} options={lineOptions} /></div></div>
-              </div>
+              <PrePosComparison applications={scoresByApplication} />
+
               <div className="grid-2 mb-4">
                 <div className="card">
-                  <div className="card-header"><h3>Perfil Atual — Motivação</h3></div>
-                  <div className="card-body"><div className="chart-container"><RadarChart data={radarData(MOTIVACAO_CONSTRUCTS)} options={radarOptions} /></div></div>
+                  <div className="card-header"><h3>Perfil Atual</h3></div>
+                  <div className="card-body"><div className="chart-container"><RadarChart data={radarData} options={radarOptions} /></div></div>
                 </div>
                 <div className="card">
-                  <div className="card-header"><h3>Perfil Atual — Estratégias</h3></div>
-                  <div className="card-body"><div className="chart-container"><RadarChart data={radarData(ESTRATEGIA_CONSTRUCTS)} options={radarOptions} /></div></div>
+                  <div className="card-header"><h3>Evolução por Construto</h3></div>
+                  <div className="card-body"><div className="chart-container"><LineChart data={lineData} options={lineOptions} /></div></div>
                 </div>
               </div>
-              <div className="card mb-4">
-                <div className="card-header"><h3>Evolução — Escalas de Estratégias de Aprendizagem</h3></div>
-                <div className="card-body"><div className="chart-container"><LineChart data={lineData(ESTRATEGIA_CONSTRUCTS)} options={lineOptions} /></div></div>
-              </div>
 
-              <ApplicationsComparison studentId={student.id} scoresByApplication={scoresByApplication} />
+              <ApplicationsComparison studentId={student.id} rosterEmail={rosterEmail} scoresByApplication={scoresByApplication} />
 
               <div className="card mb-4">
                 <div className="card-header">

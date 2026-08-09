@@ -1,16 +1,16 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { MOTIVACAO_CONSTRUCTS, ESTRATEGIA_CONSTRUCTS } from "@/lib/mslq";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+const TAG_MOTIVACAO = new Set(["Motivação", "Autocontrole Emocional"]);
+
 function tagClassFor(constructo: string | null) {
   if (!constructo) return "tag-geral";
-  if (MOTIVACAO_CONSTRUCTS.some((c) => c.constructo === constructo)) return "tag-motivacao";
-  if (ESTRATEGIA_CONSTRUCTS.some((c) => c.constructo === constructo)) return "tag-estrategia";
-  return "tag-geral";
+  if (TAG_MOTIVACAO.has(constructo)) return "tag-motivacao";
+  return "tag-estrategia";
 }
 
 export default async function SugestoesPage() {

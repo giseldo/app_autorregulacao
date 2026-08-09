@@ -1,9 +1,10 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { ALL_CONSTRUCTS, MOTIVACAO_CONSTRUCTS, ESTRATEGIA_CONSTRUCTS, scoreConstructs, statusFor } from "@/lib/mslq";
+import { ALL_CONSTRUCTS, scoreConstructs, statusFor } from "@/lib/mslq";
 import { LineChart } from "@/components/charts/LineChart";
 import { RadarChart } from "@/components/charts/RadarChart";
 import { ApplicationsComparison, type ScoredApplication } from "@/components/ApplicationsComparison";
+import { PrePosComparison } from "@/components/PrePosComparison";
 
 const PALETTE = [
   "#F59E0B", "#0EA5E9", "#8B5CF6", "#10B981", "#EF4444", "#EC4899", "#14B8A6",
@@ -62,34 +63,30 @@ export default async function HistoricoPage() {
   const last = scoresByApplication[scoresByApplication.length - 1];
   const labels = scoresByApplication.map((s) => fmtDate(s.application.applied_at));
 
-  function lineData(constructs: typeof MOTIVACAO_CONSTRUCTS) {
-    return {
-      labels,
-      datasets: constructs.map((c, i) => ({
-        label: c.label,
-        data: scoresByApplication.map((s) => Number((s.scores[c.constructo] ?? 0).toFixed(2))),
-        borderColor: PALETTE[i % PALETTE.length],
-        backgroundColor: PALETTE[i % PALETTE.length] + "22",
-        tension: 0.35,
-        pointRadius: 4,
-      })),
-    };
-  }
+  const lineData = {
+    labels,
+    datasets: ALL_CONSTRUCTS.map((c, i) => ({
+      label: c.label,
+      data: scoresByApplication.map((s) => Number((s.scores[c.constructo] ?? 0).toFixed(2))),
+      borderColor: PALETTE[i % PALETTE.length],
+      backgroundColor: PALETTE[i % PALETTE.length] + "22",
+      tension: 0.35,
+      pointRadius: 4,
+    })),
+  };
 
-  function radarData(constructs: typeof MOTIVACAO_CONSTRUCTS) {
-    return {
-      labels: constructs.map((c) => c.label),
-      datasets: [
-        {
-          label: "Perfil atual",
-          data: constructs.map((c) => Number((last.scores[c.constructo] ?? 0).toFixed(2))),
-          backgroundColor: "rgba(79,70,229,.18)",
-          borderColor: "#4F46E5",
-          pointBackgroundColor: "#4F46E5",
-        },
-      ],
-    };
-  }
+  const radarData = {
+    labels: ALL_CONSTRUCTS.map((c) => c.label),
+    datasets: [
+      {
+        label: "Perfil atual",
+        data: ALL_CONSTRUCTS.map((c) => Number((last.scores[c.constructo] ?? 0).toFixed(2))),
+        backgroundColor: "rgba(79,70,229,.18)",
+        borderColor: "#4F46E5",
+        pointBackgroundColor: "#4F46E5",
+      },
+    ],
+  };
 
   const lineOptions = {
     scales: { y: { min: 1, max: 7, ticks: { stepSize: 1 } } },
@@ -104,50 +101,30 @@ export default async function HistoricoPage() {
     <>
       <div className="page-header">
         <h2>Meu Histórico 📈</h2>
-        <p>Acompanhe sua evolução nos construtos de motivação e estratégias de aprendizagem (MSLQ).</p>
+        <p>Acompanhe sua evolução no perfil de autorregulação da aprendizagem.</p>
       </div>
 
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3>Evolução — Escalas de Motivação</h3>
-        </div>
-        <div className="card-body">
-          <div className="chart-container">
-            <LineChart data={lineData(MOTIVACAO_CONSTRUCTS)} options={lineOptions} />
-          </div>
-        </div>
-      </div>
+      <PrePosComparison applications={scoresByApplication} />
 
       <div className="grid-2 mb-4">
         <div className="card">
           <div className="card-header">
-            <h3>Perfil Atual — Motivação</h3>
+            <h3>Perfil Atual</h3>
           </div>
           <div className="card-body">
             <div className="chart-container">
-              <RadarChart data={radarData(MOTIVACAO_CONSTRUCTS)} options={radarOptions} />
+              <RadarChart data={radarData} options={radarOptions} />
             </div>
           </div>
         </div>
         <div className="card">
           <div className="card-header">
-            <h3>Perfil Atual — Estratégias</h3>
+            <h3>Evolução por Construto</h3>
           </div>
           <div className="card-body">
             <div className="chart-container">
-              <RadarChart data={radarData(ESTRATEGIA_CONSTRUCTS)} options={radarOptions} />
+              <LineChart data={lineData} options={lineOptions} />
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3>Evolução — Escalas de Estratégias de Aprendizagem</h3>
-        </div>
-        <div className="card-body">
-          <div className="chart-container">
-            <LineChart data={lineData(ESTRATEGIA_CONSTRUCTS)} options={lineOptions} />
           </div>
         </div>
       </div>

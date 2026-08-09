@@ -55,12 +55,20 @@ export type MslqQuestion = {
   reversa: boolean;
 };
 
+export type MslqRound = "pre" | "pos" | "extra";
+
 export type MslqApplication = {
   id: string;
-  student_id: string;
+  /** null quando importada por e-mail para um aluno que ainda não fez login (ver roster_email). */
+  student_id: string | null;
   course_id: string | null;
   label: string | null;
   applied_at: string;
+  /** E-mail/nome do respondente quando importado sem profile ainda (mesmo padrão de recommendations.roster_email). */
+  roster_email: string | null;
+  roster_name: string | null;
+  /** Rodada da pesquisa (pré-teste/pós-teste/3ª aplicação); null para questionário auto-respondido no app. */
+  round: MslqRound | null;
 };
 
 export type MslqAnswer = {
@@ -131,7 +139,7 @@ export type Database = {
       >;
       google_tokens: Table<GoogleTokenRow, GoogleTokenRow>;
       mslq_questions: Table<MslqQuestion, MslqQuestion>;
-      mslq_applications: Table<MslqApplication, Partial<MslqApplication> & { student_id: string }>;
+      mslq_applications: Table<MslqApplication, Partial<MslqApplication>>;
       mslq_answers: Table<MslqAnswer, MslqAnswer>;
       recommendation_templates: Table<RecommendationTemplate, RecommendationTemplate>;
       recommendation_template_constructs: Table<RecommendationTemplateConstruct, RecommendationTemplateConstruct>;

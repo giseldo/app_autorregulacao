@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { getActiveCourse, getCourseOverview } from "@/lib/professorData";
-import { ALL_CONSTRUCTS, MOTIVACAO_CONSTRUCTS, ESTRATEGIA_CONSTRUCTS } from "@/lib/mslq";
+import { ALL_CONSTRUCTS } from "@/lib/mslq";
 import { RadarChart } from "@/components/charts/RadarChart";
 import { BarChart } from "@/components/charts/BarChart";
 
@@ -45,25 +45,23 @@ export default async function DashboardPage() {
     : 0;
   const atRisk = withData.filter((s) => (s.overallScore ?? 0) < course.limite);
 
-  function radarData(constructs: typeof MOTIVACAO_CONSTRUCTS) {
-    return {
-      labels: constructs.map((c) => c.label),
-      datasets: [
-        {
-          label: "Turma",
-          data: constructs.map((c) => {
-            const vals = withData
-              .map((s) => s.latest?.scores[c.constructo])
-              .filter((v): v is number => v != null);
-            return vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : 0;
-          }),
-          backgroundColor: "rgba(16,185,129,.18)",
-          borderColor: "#10B981",
-          pointBackgroundColor: "#10B981",
-        },
-      ],
-    };
-  }
+  const radarData = {
+    labels: ALL_CONSTRUCTS.map((c) => c.label),
+    datasets: [
+      {
+        label: "Turma",
+        data: ALL_CONSTRUCTS.map((c) => {
+          const vals = withData
+            .map((s) => s.latest?.scores[c.constructo])
+            .filter((v): v is number => v != null);
+          return vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : 0;
+        }),
+        backgroundColor: "rgba(16,185,129,.18)",
+        borderColor: "#10B981",
+        pointBackgroundColor: "#10B981",
+      },
+    ],
+  };
 
   const barData = {
     labels: ALL_CONSTRUCTS.map((c) => `${c.icon} ${c.label}`),
@@ -155,11 +153,11 @@ export default async function DashboardPage() {
       <div className="grid-2 mb-4">
         <div className="card">
           <div className="card-header">
-            <h3>Radar MSLQ — Motivação (turma)</h3>
+            <h3>Radar — Perfil de Autorregulação (turma)</h3>
           </div>
           <div className="card-body">
             <div className="chart-container">
-              <RadarChart data={radarData(MOTIVACAO_CONSTRUCTS)} options={radarOptions} />
+              <RadarChart data={radarData} options={radarOptions} />
             </div>
           </div>
         </div>
@@ -181,41 +179,29 @@ export default async function DashboardPage() {
                     {initialsOf(s.name)}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div className="font-semibold text-sm">{s.name}</div>
+                    <div className="font-semibold text-sm">
+                      {s.name}
+                      {!s.profile && <span className="text-xs text-muted"> ⏳</span>}
+                    </div>
                     <div className="text-xs text-muted">
-                      {s.profile
+                      {s.applicationsCount > 0
                         ? `${s.applicationsCount} aplicação(ões)${s.latest ? ` · ${fmtDate(s.latest.application.applied_at)}` : ""}`
-                        : "Aguardando 1º login no app"}
+                        : "Sem respostas ainda"}
                     </div>
                   </div>
                   <span className={`score-badge ${cls}`}>{score != null ? score.toFixed(1) : "—"}</span>
                 </>
               );
-              return s.profile ? (
+              return (
                 <Link
                   key={s.email}
-                  href={`/professor/alunos/${s.profile.id}`}
+                  href={`/professor/alunos/${s.profile ? s.profile.id : `email:${encodeURIComponent(s.email)}`}`}
                   className={`student-mini ${score != null && score < course.limite ? "at-risk" : ""}`}
                 >
                   {content}
                 </Link>
-              ) : (
-                <div key={s.email} className="student-mini" style={{ cursor: "default", opacity: 0.7 }}>
-                  {content}
-                </div>
               );
             })}
-          </div>
-        </div>
-      </div>
-
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3>Radar MSLQ — Estratégias de Aprendizagem (turma)</h3>
-        </div>
-        <div className="card-body">
-          <div className="chart-container">
-            <RadarChart data={radarData(ESTRATEGIA_CONSTRUCTS)} options={radarOptions} />
           </div>
         </div>
       </div>

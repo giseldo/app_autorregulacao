@@ -87,17 +87,7 @@ export function MslqForm({ questions }: { questions: MslqQuestion[] }) {
     undefined
   );
 
-  const motivacao = useMemo(
-    () => questions.filter((q) => q.tipo === "Escalas de Motivacao"),
-    [questions]
-  );
-  const estrategias = useMemo(
-    () => questions.filter((q) => q.tipo === "Escalas de Estratégias de aprendizagem"),
-    [questions]
-  );
-
-  const groupedMotivacao = useMemo(() => groupByConstruct(motivacao), [motivacao]);
-  const groupedEstrategias = useMemo(() => groupByConstruct(estrategias), [estrategias]);
+  const grouped = useMemo(() => groupByConstruct(questions), [questions]);
 
   const totalRespondidas = Object.keys(answers).length;
   const completo = totalRespondidas === questions.length;
@@ -132,20 +122,9 @@ export function MslqForm({ questions }: { questions: MslqQuestion[] }) {
       </div>
 
       <Section
-        title="Escalas de Motivação"
-        constructs={ALL_CONSTRUCTS.filter((c) =>
-          motivacao.some((q) => q.constructo === c.constructo)
-        )}
-        grouped={groupedMotivacao}
-        answers={answers}
-        onPick={onPick}
-      />
-      <Section
-        title="Escalas de Estratégias de Aprendizagem"
-        constructs={ALL_CONSTRUCTS.filter((c) =>
-          estrategias.some((q) => q.constructo === c.constructo)
-        )}
-        grouped={groupedEstrategias}
+        title="Perfil de Autorregulação da Aprendizagem"
+        constructs={ALL_CONSTRUCTS.filter((c) => grouped.has(c.constructo))}
+        grouped={grouped}
         answers={answers}
         onPick={onPick}
       />

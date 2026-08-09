@@ -4,7 +4,8 @@ import { scoreConstructs, ALL_CONSTRUCTS } from "@/lib/mslq";
 import type { Profile, MslqApplication, MslqQuestion, Course } from "@/lib/supabase/types";
 
 export interface StudentOverview {
-  /** null = aluno ainda não fez o primeiro login (só existe em course_roster) */
+  /** null = aluno ainda não fez o primeiro login (do course_roster, ou só
+   * identificado por e-mail/nome numa aplicação importada de planilha). */
   profile: Profile | null;
   name: string;
   email: string;
@@ -29,6 +30,40 @@ export async function getActiveCourse(teacherId: string): Promise<Course | null>
   return data ?? null;
 }
 
+function summarize(
+  apps: MslqApplication[],
+  questions: MslqQuestion[],
+  answers: { application_id: string; id_questao: string; valor: number }[],
+  profile: Profile | null,
+  name: string,
+  email: string
+): StudentOverview {
+  const applicationsCount = apps.length;
+  const last = apps[apps.length - 1] ?? null;
+
+  if (!last) {
+    return { profile, name, email, applicationsCount, latest: null, overallScore: null };
+  }
+
+  const answersMap: Record<string, number> = {};
+  for (const a of answers) {
+    if (a.application_id === last.id) answersMap[a.id_questao] = a.valor;
+  }
+  const scores = scoreConstructs(questions, answersMap);
+
+  const normalized = ALL_CONSTRUCTS.map((c) => {
+    const v = scores[c.constructo];
+    if (v == null) return null;
+    return c.invertido ? 8 - v : v;
+  }).filter((v): v is number => v !== null);
+
+  const overallScore = normalized.length
+    ? normalized.reduce((a, b) => a + b, 0) / normalized.length
+    : null;
+
+  return { profile, name, email, applicationsCount, latest: { application: last, scores }, overallScore };
+}
+
 export async function getCourseOverview(
   courseId: string
 ): Promise<{ students: StudentOverview[]; questions: MslqQuestion[] }> {
@@ -45,71 +80,65 @@ export async function getCourseOverview(
     .filter((p): p is Profile => p !== null);
 
   const enrolledEmails = new Set(students.map((s) => s.email));
-
   const studentIds = students.map((s) => s.id);
 
-  const { data: applications } = studentIds.length
-    ? await supabase
-        .from("mslq_applications")
-        .select("*")
-        .in("student_id", studentIds)
-        .order("applied_at", { ascending: true })
-    : { data: [] as MslqApplication[] };
+  // Aplicações de alunos já logados (mesmo se o course_id delas ficou nulo por
+  // terem sido respondidas antes da matrícula existir) + aplicações importadas
+  // por e-mail (sem student_id ainda) para esta turma — é isso que faz o
+  // professor enxergar dados de quem nunca fez login no app.
+  const [{ data: appsByStudent }, { data: appsByRoster }] = await Promise.all([
+    studentIds.length
+      ? supabase
+          .from("mslq_applications")
+          .select("*")
+          .in("student_id", studentIds)
+          .order("applied_at", { ascending: true })
+      : Promise.resolve({ data: [] as MslqApplication[] }),
+    supabase
+      .from("mslq_applications")
+      .select("*")
+      .eq("course_id", courseId)
+      .is("student_id", null)
+      .order("applied_at", { ascending: true }),
+  ]);
 
-  const appIds = (applications ?? []).map((a) => a.id);
+  const applications = [...(appsByStudent ?? []), ...(appsByRoster ?? [])];
+  const appIds = applications.map((a) => a.id);
   const { data: answers } = appIds.length
     ? await supabase.from("mslq_answers").select("*").in("application_id", appIds)
     : { data: [] };
 
   const overview: StudentOverview[] = students.map((profile) => {
-    const studentApps = (applications ?? []).filter((a) => a.student_id === profile.id);
-    const applicationsCount = studentApps.length;
-    const last = studentApps[studentApps.length - 1] ?? null;
-
-    if (!last) {
-      return { profile, name: profile.name, email: profile.email, applicationsCount, latest: null, overallScore: null };
-    }
-
-    const answersMap: Record<string, number> = {};
-    for (const a of answers ?? []) {
-      if (a.application_id === last.id) answersMap[a.id_questao] = a.valor;
-    }
-    const scores = scoreConstructs(questions ?? [], answersMap);
-
-    const normalized = ALL_CONSTRUCTS.map((c) => {
-      const v = scores[c.constructo];
-      if (v == null) return null;
-      return c.invertido ? 8 - v : v;
-    }).filter((v): v is number => v !== null);
-
-    const overallScore = normalized.length
-      ? normalized.reduce((a, b) => a + b, 0) / normalized.length
-      : null;
-
-    return {
-      profile,
-      name: profile.name,
-      email: profile.email,
-      applicationsCount,
-      latest: { application: last, scores },
-      overallScore,
-    };
+    const studentApps = applications.filter((a) => a.student_id === profile.id);
+    return summarize(studentApps, questions ?? [], answers ?? [], profile, profile.name, profile.email);
   });
 
   // Alunos que o professor já sincronizou do Classroom mas que ainda não
-  // fizeram o primeiro login no app (sem profiles/enrollments ainda).
+  // fizeram o primeiro login no app (sem profiles/enrollments ainda) — se
+  // houver aplicações importadas por e-mail pra eles, aparecem aqui com dados.
   const pending: StudentOverview[] = (roster ?? [])
     .filter((r) => !enrolledEmails.has(r.email))
-    .map((r) => ({
-      profile: null,
-      name: r.name,
-      email: r.email,
-      applicationsCount: 0,
-      latest: null,
-      overallScore: null,
-    }));
+    .map((r) => {
+      const rosterApps = applications.filter((a) => a.student_id === null && a.roster_email === r.email);
+      return summarize(rosterApps, questions ?? [], answers ?? [], null, r.name, r.email);
+    });
 
-  const all = [...overview, ...pending].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  // Respondentes importados cujo e-mail não está nem em profiles nem no
+  // roster do Classroom (ex: e-mail pessoal usado no Google Forms) — sem
+  // isso ficariam invisíveis pro professor mesmo tendo dado real importado.
+  const knownEmails = new Set([...enrolledEmails, ...(roster ?? []).map((r) => r.email)]);
+  const extraEmails = new Map<string, string>();
+  for (const a of appsByRoster ?? []) {
+    if (a.roster_email && !knownEmails.has(a.roster_email) && !extraEmails.has(a.roster_email)) {
+      extraEmails.set(a.roster_email, a.roster_name ?? a.roster_email);
+    }
+  }
+  const unmatched: StudentOverview[] = [...extraEmails.entries()].map(([email, name]) => {
+    const rosterApps = applications.filter((a) => a.student_id === null && a.roster_email === email);
+    return summarize(rosterApps, questions ?? [], answers ?? [], null, name, email);
+  });
+
+  const all = [...overview, ...pending, ...unmatched].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
   return { students: all, questions: questions ?? [] };
 }
