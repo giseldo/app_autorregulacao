@@ -23,13 +23,19 @@ function fmtDateFull(iso: string) {
 
 export default async function AlunoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireProfile("professor");
-  const { id } = await params;
+  const { id: rawId } = await params;
+  // O segmento dinâmico chega aqui ainda percent-encoded (ex: "email%3Afoo%2540bar.com"
+  // em vez de "email:foo@bar.com") — o link já manda encodeURIComponent(email), então
+  // sem decodificar aqui o startsWith("email:") abaixo falha e o "@"/":" viram um "id"
+  // inválido, quebrando a query de profiles com erro 400. decodeURIComponent é seguro
+  // mesmo se o valor já vier decodificado (string sem "%" fica inalterada).
+  const id = decodeURIComponent(rawId);
   const supabase = await createClient();
 
   // "email:<endereco>" identifica um aluno que ainda não fez login no app
   // (mesma convenção usada em enviar-sugestao?student_id=email:...) — os dados
   // dele (importados de planilha) ficam em mslq_applications.roster_email.
-  const rosterEmail = id.startsWith("email:") ? decodeURIComponent(id.slice("email:".length)) : null;
+  const rosterEmail = id.startsWith("email:") ? id.slice("email:".length) : null;
 
   let student: { id: string | null; name: string; email: string };
   let limite = 4;
