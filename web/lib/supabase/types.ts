@@ -111,6 +111,16 @@ export type RecommendationRead = {
   read_at: string;
 };
 
+export type RecommendationEvaluation = {
+  recommendation_id: string;
+  student_id: string;
+  clareza: number;
+  satisfacao: number;
+  recomendaria: number;
+  resolveu_problema: number;
+  created_at: string;
+};
+
 export type LlmSettingsRow = {
   id: true;
   provider: string;
@@ -150,6 +160,17 @@ export type Database = {
       recommendation_reads: Table<
         RecommendationRead,
         Partial<RecommendationRead> & { recommendation_id: string; student_id: string }
+      >;
+      recommendation_evaluations: Table<
+        RecommendationEvaluation,
+        Partial<RecommendationEvaluation> & {
+          recommendation_id: string;
+          student_id: string;
+          clareza: number;
+          satisfacao: number;
+          recomendaria: number;
+          resolveu_problema: number;
+        }
       >;
       llm_settings: Table<LlmSettingsRow, Partial<LlmSettingsRow> & { id: true }>;
     };

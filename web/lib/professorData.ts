@@ -84,6 +84,121 @@ function summarize(
   return { profile, name, email, applicationsCount, latest: { application: last, scores }, overallScore, byRound };
 }
 
+export interface RecommendationsSummary {
+  total: number;
+  personalizadas: number;
+  controle: number;
+  byConstruct: { constructo: string; count: number }[];
+}
+
+/** Personalizada = direcionada a um aluno específico (student_id preenchido);
+ * controle = broadcast pra turma toda (manual ou dica automática), sem alvo. */
+export async function getRecommendationsSummary(courseId: string): Promise<RecommendationsSummary> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("recommendations").select("student_id, constructo").eq("course_id", courseId);
+  const rows = data ?? [];
+
+  const personalizadas = rows.filter((r) => r.student_id !== null).length;
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    if (!r.constructo) continue;
+    counts.set(r.constructo, (counts.get(r.constructo) ?? 0) + 1);
+  }
+  const byConstruct = ALL_CONSTRUCTS.map((c) => ({ constructo: c.constructo, count: counts.get(c.constructo) ?? 0 }));
+
+  return { total: rows.length, personalizadas, controle: rows.length - personalizadas, byConstruct };
+}
+
+const EVALUATION_ITEMS = [
+  { key: "clareza", label: "Clareza" },
+  { key: "satisfacao", label: "Satisfação geral" },
+  { key: "recomendaria", label: "Recomendaria a outros" },
+  { key: "resolveu_problema", label: "Resolver o problema" },
+] as const;
+
+export interface RecommendationEvaluationSummary {
+  count: number;
+  overallAvg: number | null;
+  medianOverall: number | null;
+  /** % de respostas individuais (não de avaliações) na faixa 5-7. */
+  favorablePct: number | null;
+  /** alfa de Cronbach entre os 4 itens; null se não houver avaliações suficientes (n < 2) ou variância total zero. */
+  cronbachAlpha: number | null;
+  items: { key: string; label: string; avg: number }[];
+}
+
+/** alfa de Cronbach padrão (k itens, variância amostral) a partir da matriz linhas=avaliações, colunas=itens. */
+function cronbachAlphaOf(matrix: number[][]): number | null {
+  const n = matrix.length;
+  const k = matrix[0]?.length ?? 0;
+  if (n < 2 || k < 2) return null;
+
+  const itemVariances = Array.from({ length: k }, (_, j) => {
+    const col = matrix.map((row) => row[j]);
+    const mean = col.reduce((a, b) => a + b, 0) / n;
+    return col.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
+  });
+  const totals = matrix.map((row) => row.reduce((a, b) => a + b, 0));
+  const totalMean = totals.reduce((a, b) => a + b, 0) / n;
+  const totalVariance = totals.reduce((a, b) => a + (b - totalMean) ** 2, 0) / (n - 1);
+  if (totalVariance === 0) return null;
+
+  const sumItemVar = itemVariances.reduce((a, b) => a + b, 0);
+  return (k / (k - 1)) * (1 - sumItemVar / totalVariance);
+}
+
+/** Agrega as avaliações reais que os alunos deram às recomendações desta turma
+ * (tabela recommendation_evaluations, ver migration 0010) — nenhum número aqui é inventado:
+ * se não houver avaliações ainda, os campos vêm null/0. */
+export async function getRecommendationEvaluationSummary(courseId: string): Promise<RecommendationEvaluationSummary> {
+  const supabase = await createClient();
+  const empty: RecommendationEvaluationSummary = {
+    count: 0,
+    overallAvg: null,
+    medianOverall: null,
+    favorablePct: null,
+    cronbachAlpha: null,
+    items: [],
+  };
+
+  const { data: recs } = await supabase.from("recommendations").select("id").eq("course_id", courseId);
+  const recIds = (recs ?? []).map((r) => r.id);
+  if (recIds.length === 0) return empty;
+
+  const { data: evals } = await supabase
+    .from("recommendation_evaluations")
+    .select("clareza, satisfacao, recomendaria, resolveu_problema")
+    .in("recommendation_id", recIds);
+  const rows = evals ?? [];
+  if (rows.length === 0) return empty;
+
+  const matrix = rows.map((r) => EVALUATION_ITEMS.map((d) => r[d.key]));
+  const items = EVALUATION_ITEMS.map((d, j) => ({
+    key: d.key,
+    label: d.label,
+    avg: matrix.reduce((acc, row) => acc + row[j], 0) / matrix.length,
+  }));
+
+  const overallPerRow = matrix.map((row) => row.reduce((a, b) => a + b, 0) / row.length);
+  const overallAvg = overallPerRow.reduce((a, b) => a + b, 0) / overallPerRow.length;
+
+  const sorted = [...overallPerRow].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const medianOverall = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+  const allAnswers = matrix.flat();
+  const favorablePct = allAnswers.filter((v) => v >= 5).length / allAnswers.length;
+
+  return {
+    count: rows.length,
+    overallAvg,
+    medianOverall,
+    favorablePct,
+    cronbachAlpha: cronbachAlphaOf(matrix),
+    items,
+  };
+}
+
 export async function getCourseOverview(
   courseId: string
 ): Promise<{ students: StudentOverview[]; questions: MslqQuestion[] }> {

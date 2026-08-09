@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { RecommendationEvaluationForm } from "@/components/RecommendationEvaluationForm";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -32,6 +33,12 @@ export default async function SugestoesPage() {
     );
   }
 
+  const { data: evaluations } = await supabase
+    .from("recommendation_evaluations")
+    .select("recommendation_id")
+    .eq("student_id", profile.id);
+  const evaluatedIds = new Set((evaluations ?? []).map((e) => e.recommendation_id));
+
   return (
     <>
       <div className="page-header">
@@ -57,6 +64,13 @@ export default async function SugestoesPage() {
               {r.student_id === null && <span className="text-xs text-muted">📢 Enviado para toda a turma</span>}
               {r.auto && <span className="text-xs text-muted">🤖 Sugestão automática</span>}
             </div>
+            {evaluatedIds.has(r.id) ? (
+              <div className="text-xs text-muted mt-3" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+                ✅ Você já avaliou esta sugestão. Obrigado pelo feedback!
+              </div>
+            ) : (
+              <RecommendationEvaluationForm recommendationId={r.id} />
+            )}
           </div>
         ))
       )}
