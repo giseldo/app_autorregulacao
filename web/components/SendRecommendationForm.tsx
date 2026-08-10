@@ -83,7 +83,7 @@ export function SendRecommendationForm({
                 <div className={`alert ${(selectedStudent.overallScore ?? 0) < limite ? "alert-warning" : "alert-success"}`}>
                   <span>{(selectedStudent.overallScore ?? 0) < limite ? "⚠️" : "✅"}</span>
                   <div>
-                    <strong>{selectedStudent.name}</strong> — Média MSLQ:{" "}
+                    <strong>{selectedStudent.name}</strong> — Média geral:{" "}
                     {selectedStudent.overallScore != null ? selectedStudent.overallScore.toFixed(1) : "sem dados"}
                     /7
                     <br />
@@ -92,7 +92,7 @@ export function SendRecommendationForm({
                         ? selectedStudent.lowConstructs.length > 0
                           ? `Baixos: ${selectedStudent.lowConstructs.join(", ")}`
                           : "Todos os construtos satisfatórios."
-                        : "⏳ Ainda não logou no app — sem dados de MSLQ, mas a sugestão é publicada no Classroom normalmente."}
+                        : "⏳ Ainda não logou no app — sem dados do questionário, mas a sugestão é publicada no Classroom normalmente."}
                     </span>
                   </div>
                 </div>

@@ -11,8 +11,8 @@ export default async function QuestionarioPage() {
   return (
     <>
       <div className="page-header">
-        <h2>Questionário MSLQ 📝</h2>
-        <p>Motivated Strategies for Learning Questionnaire — sua percepção sobre motivação e estratégias de estudo.</p>
+        <h2>Questionário de Autorregulação 📝</h2>
+        <p>Sua percepção sobre motivação, metacognição e estratégias de estudo.</p>
       </div>
       <MslqForm questions={questions ?? []} />
     </>

@@ -17,12 +17,16 @@ export function AppShell({
   profile,
   navItems,
   courseName,
+  courseSwitcher,
   children,
 }: {
   profile: Profile;
   navItems: NavItem[];
   /** Turma do Google Classroom em uso, mostrada no topo da sidebar. */
   courseName?: string | null;
+  /** Seletor de turma (só passado quando o professor tem mais de uma turma
+   * sincronizada) — substitui o texto simples do nome da turma. */
+  courseSwitcher?: ReactNode;
   children: ReactNode;
 }) {
   const isTeacher = profile.role === "professor";
@@ -33,7 +37,13 @@ export function AppShell({
         <div className="sidebar-header">
           <div className="sidebar-logo">NeoAVA-ARA</div>
           <div className="sidebar-role">{isTeacher ? "Professor(a)" : "Aluno(a)"}</div>
-          {courseName && <div className="sidebar-course">🏫 {courseName}</div>}
+          {courseSwitcher ? (
+            <div className="sidebar-course">
+              🏫 {courseSwitcher}
+            </div>
+          ) : (
+            courseName && <div className="sidebar-course">🏫 {courseName}</div>
+          )}
         </div>
         <div className="sidebar-user">
           <div className={`avatar avatar-${isTeacher ? "teacher" : "student"}`}>

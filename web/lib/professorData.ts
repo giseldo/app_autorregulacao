@@ -1,7 +1,11 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { scoreConstructs, ALL_CONSTRUCTS } from "@/lib/mslq";
+import { cronbachAlpha, median } from "@/lib/stats";
 import type { Profile, MslqApplication, MslqQuestion, Course, MslqRound } from "@/lib/supabase/types";
+
+export const ACTIVE_COURSE_COOKIE = "active_course_id";
 
 export interface StudentOverview {
   /** null = aluno ainda não fez o primeiro login (do course_roster, ou só
@@ -27,11 +31,24 @@ function overallOf(scores: Record<string, number>): number {
   return normalized.length ? normalized.reduce((a, b) => a + b, 0) / normalized.length : 0;
 }
 
-/** Turma "ativa" do professor = a mais recentemente sincronizada. Simplificação
- * deliberada em relação a suportar múltiplas turmas simultâneas na UI (mesmo
- * modelo de "uma turma selecionada por vez" que o Streamlit usava). */
+/** Turma "ativa" do professor: a escolhida no seletor de turma (cookie
+ * active_course_id, ver switchActiveCourse em app/actions/professor.ts) se
+ * ainda pertencer a ele, senão a mais recentemente sincronizada. */
 export async function getActiveCourse(teacherId: string): Promise<Course | null> {
   const supabase = await createClient();
+  const cookieStore = await cookies();
+  const preferredId = cookieStore.get(ACTIVE_COURSE_COOKIE)?.value;
+
+  if (preferredId) {
+    const { data } = await supabase
+      .from("courses")
+      .select("*")
+      .eq("id", preferredId)
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+    if (data) return data;
+  }
+
   const { data } = await supabase
     .from("courses")
     .select("*")
@@ -40,6 +57,18 @@ export async function getActiveCourse(teacherId: string): Promise<Course | null>
     .limit(1)
     .maybeSingle();
   return data ?? null;
+}
+
+/** Todas as turmas sincronizadas por este professor, mais recente primeiro —
+ * usado pelo seletor de turma na sidebar quando há mais de uma. */
+export async function listCoursesForTeacher(teacherId: string): Promise<Course[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("teacher_id", teacherId)
+    .order("created_at", { ascending: false });
+  return data ?? [];
 }
 
 function scoresFor(
@@ -127,26 +156,6 @@ export interface RecommendationEvaluationSummary {
   items: { key: string; label: string; avg: number }[];
 }
 
-/** alfa de Cronbach padrão (k itens, variância amostral) a partir da matriz linhas=avaliações, colunas=itens. */
-function cronbachAlphaOf(matrix: number[][]): number | null {
-  const n = matrix.length;
-  const k = matrix[0]?.length ?? 0;
-  if (n < 2 || k < 2) return null;
-
-  const itemVariances = Array.from({ length: k }, (_, j) => {
-    const col = matrix.map((row) => row[j]);
-    const mean = col.reduce((a, b) => a + b, 0) / n;
-    return col.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
-  });
-  const totals = matrix.map((row) => row.reduce((a, b) => a + b, 0));
-  const totalMean = totals.reduce((a, b) => a + b, 0) / n;
-  const totalVariance = totals.reduce((a, b) => a + (b - totalMean) ** 2, 0) / (n - 1);
-  if (totalVariance === 0) return null;
-
-  const sumItemVar = itemVariances.reduce((a, b) => a + b, 0);
-  return (k / (k - 1)) * (1 - sumItemVar / totalVariance);
-}
-
 /** Agrega as avaliações reais que os alunos deram às recomendações desta turma
  * (tabela recommendation_evaluations, ver migration 0010) — nenhum número aqui é inventado:
  * se não houver avaliações ainda, os campos vêm null/0. */
@@ -182,21 +191,67 @@ export async function getRecommendationEvaluationSummary(courseId: string): Prom
   const overallPerRow = matrix.map((row) => row.reduce((a, b) => a + b, 0) / row.length);
   const overallAvg = overallPerRow.reduce((a, b) => a + b, 0) / overallPerRow.length;
 
-  const sorted = [...overallPerRow].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  const medianOverall = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-
   const allAnswers = matrix.flat();
   const favorablePct = allAnswers.filter((v) => v >= 5).length / allAnswers.length;
 
   return {
     count: rows.length,
     overallAvg,
-    medianOverall,
+    medianOverall: median(overallPerRow),
     favorablePct,
-    cronbachAlpha: cronbachAlphaOf(matrix),
+    cronbachAlpha: cronbachAlpha(matrix),
     items,
   };
+}
+
+export interface RecommendationEvaluationRow {
+  studentName: string;
+  studentEmail: string;
+  constructo: string | null;
+  title: string;
+  clareza: number;
+  satisfacao: number;
+  recomendaria: number;
+  resolveu_problema: number;
+  created_at: string;
+}
+
+/** Uma linha por avaliação individual (não agregada) — usado no export
+ * XLSX, onde cada observação real importa mais que a média. */
+export async function getRecommendationEvaluationsRaw(courseId: string): Promise<RecommendationEvaluationRow[]> {
+  const supabase = await createClient();
+
+  const { data: recs } = await supabase.from("recommendations").select("id, constructo, title").eq("course_id", courseId);
+  const recMap = new Map((recs ?? []).map((r) => [r.id, r]));
+  const recIds = [...recMap.keys()];
+  if (recIds.length === 0) return [];
+
+  const { data: evals } = await supabase
+    .from("recommendation_evaluations")
+    .select("recommendation_id, student_id, clareza, satisfacao, recomendaria, resolveu_problema, created_at")
+    .in("recommendation_id", recIds);
+  const rows = evals ?? [];
+  if (rows.length === 0) return [];
+
+  const studentIds = [...new Set(rows.map((r) => r.student_id))];
+  const { data: profiles } = await supabase.from("profiles").select("id, name, email").in("id", studentIds);
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+  return rows.map((r) => {
+    const rec = recMap.get(r.recommendation_id);
+    const profile = profileMap.get(r.student_id);
+    return {
+      studentName: profile?.name ?? "—",
+      studentEmail: profile?.email ?? "—",
+      constructo: rec?.constructo ?? null,
+      title: rec?.title ?? "—",
+      clareza: r.clareza,
+      satisfacao: r.satisfacao,
+      recomendaria: r.recomendaria,
+      resolveu_problema: r.resolveu_problema,
+      created_at: r.created_at,
+    };
+  });
 }
 
 export async function getCourseOverview(

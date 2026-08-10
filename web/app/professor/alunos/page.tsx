@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { getActiveCourse, getCourseOverview } from "@/lib/professorData";
-import { ALL_CONSTRUCTS } from "@/lib/mslq";
-
-function initialsOf(name: string) {
-  return name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
-}
+import { AlunosTable } from "@/components/AlunosTable";
 
 export default async function AlunosPage() {
   const { profile } = await requireProfile("professor");
@@ -35,109 +31,17 @@ export default async function AlunosPage() {
 
   return (
     <>
-      <div className="page-header">
-        <h2>Alunos 👥</h2>
-        <p>Perfil de autorregulação de cada aluno com base na aplicação mais recente do MSLQ.</p>
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2>Alunos 👥</h2>
+          <p>Perfil de autorregulação de cada aluno com base na aplicação mais recente do questionário.</p>
+        </div>
+        <a href={`/api/professor/export?course_id=${course.id}`} className="btn btn-secondary btn-sm">
+          ⬇️ Exportar XLSX
+        </a>
       </div>
 
-      <div className="card">
-        <div className="card-body" style={{ padding: 0, overflowX: "auto" }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Aluno</th>
-                <th>Aplicações</th>
-                {ALL_CONSTRUCTS.map((c) => (
-                  <th key={c.constructo} title={c.label}>
-                    {c.icon}
-                  </th>
-                ))}
-                <th>Média</th>
-                <th>Status</th>
-                <th title="Variação entre pré-teste e pós-teste">Evolução</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((s) => {
-                const score = s.overallScore;
-                const avgCls = score == null ? "score-low" : score >= course.limite ? "score-high" : "score-low";
-                const bothRounds = s.byRound.pre && s.byRound.pos;
-                const diff = bothRounds ? s.byRound.pos!.overallScore - s.byRound.pre!.overallScore : null;
-                return (
-                  <tr key={s.email} style={s.profile || s.applicationsCount > 0 ? undefined : { opacity: 0.7 }}>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <div className="avatar avatar-student" style={{ width: 28, height: 28, fontSize: 11 }}>
-                          {initialsOf(s.name)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-sm">
-                            {s.name}
-                            {!s.profile && <span className="text-xs text-muted"> ⏳</span>}
-                          </div>
-                          <div className="text-xs text-muted">{s.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{s.applicationsCount}</td>
-                    {ALL_CONSTRUCTS.map((c) => {
-                      const v = s.latest?.scores[c.constructo];
-                      if (v == null) return <td key={c.constructo} className="text-muted">—</td>;
-                      const cls = v >= course.limite ? "score-high" : "score-low";
-                      return (
-                        <td key={c.constructo}>
-                          <span className={`score-badge ${cls}`}>{v.toFixed(1)}</span>
-                        </td>
-                      );
-                    })}
-                    <td>
-                      <span className={`score-badge ${avgCls}`}>{score != null ? score.toFixed(1) : "—"}</span>
-                    </td>
-                    <td>
-                      {score == null ? (
-                        <span className="score-badge score-low">Sem dados</span>
-                      ) : score < course.limite ? (
-                        <span className="score-badge score-low">⚠️ Em risco</span>
-                      ) : (
-                        <span className="score-badge score-high">✅ OK</span>
-                      )}
-                    </td>
-                    <td>
-                      {diff == null ? (
-                        <span className="text-xs text-muted">—</span>
-                      ) : (
-                        <span className={diff > 0.05 ? "delta-up" : diff < -0.05 ? "delta-down" : "text-muted"} style={{ fontWeight: 700, fontSize: 12 }}>
-                          {diff > 0.05 ? "🔺" : diff < -0.05 ? "🔻" : "▪️"} {diff > 0 ? "+" : ""}
-                          {diff.toFixed(1)}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/professor/alunos/${s.profile ? s.profile.id : `email:${encodeURIComponent(s.email)}`}`}
-                          className="btn btn-secondary btn-sm"
-                        >
-                          Ver
-                        </Link>
-                        <Link
-                          href={`/professor/enviar-sugestao?student_id=${
-                            s.profile ? s.profile.id : `email:${encodeURIComponent(s.email)}`
-                          }`}
-                          className="btn btn-primary btn-sm"
-                        >
-                          Sugestão
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AlunosTable students={students} limite={course.limite} />
     </>
   );
 }

@@ -15,8 +15,8 @@ interface PromptMessage {
 const GREETING: Record<"aluno" | "professor", string> = {
   aluno: "Oi! 👋 Sou o assistente do NeoAVA-ARA. Posso te dar dicas de estudo e motivação. Como posso ajudar?",
   professor:
-    "Olá! 👋 Sou o assistente do NeoAVA-ARA. Posso ajudar a interpretar os construtos do MSLQ e sugerir " +
-    "recomendações para seus alunos. Como posso ajudar?",
+    "Olá! 👋 Sou o assistente do NeoAVA-ARA. Posso ajudar a interpretar os construtos de autorregulação e " +
+    "sugerir recomendações para seus alunos. Como posso ajudar?",
 };
 
 export function Chatbot({ role }: { role: "aluno" | "professor" }) {

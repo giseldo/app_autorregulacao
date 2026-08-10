@@ -140,7 +140,7 @@ export default async function DashboardPage() {
       <div className="page-header">
         <h2>Dashboard do Professor 📊</h2>
         <p>
-          Turma: <strong>{course.name}</strong> — monitoramento da autorregulação da aprendizagem (MSLQ).
+          Turma: <strong>{course.name}</strong> — monitoramento da autorregulação da aprendizagem.
         </p>
       </div>
 
@@ -156,7 +156,7 @@ export default async function DashboardPage() {
         <div className="stat-card">
           <div className="stat-icon" style={{ background: "#ECFDF5" }}>📈</div>
           <div className="stat-content">
-            <div className="label">Média Geral MSLQ</div>
+            <div className="label">Média Geral</div>
             <div className="value">{avgAll.toFixed(1)}</div>
             <div className={`delta ${avgAll >= course.limite ? "delta-up" : "delta-down"}`}>
               {avgAll >= course.limite ? "Satisfatório" : "Abaixo do esperado"}

@@ -1,10 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getActiveCourse } from "@/lib/professorData";
+import { getActiveCourse, ACTIVE_COURSE_COOKIE } from "@/lib/professorData";
+import { runAutoTipForCourse } from "@/lib/autoTip";
 import {
   getTeacherAccessToken,
   listCourses,
@@ -13,6 +16,33 @@ import {
 } from "@/lib/google/classroom";
 
 export type ActionState = { error?: string; success?: string } | undefined;
+
+/** Troca a turma "ativa" exibida em todo o painel do professor (dashboard,
+ * alunos, enviar-sugestão, etc — todos leem getActiveCourse). Guardado num
+ * cookie porque o professor pode ter mais de uma turma sincronizada. */
+export async function switchActiveCourse(formData: FormData): Promise<void> {
+  const { profile } = await requireProfile("professor");
+  const courseId = (formData.get("course_id") as string) || "";
+
+  const supabase = await createClient();
+  const { data: course } = await supabase
+    .from("courses")
+    .select("id")
+    .eq("id", courseId)
+    .eq("teacher_id", profile.id)
+    .maybeSingle();
+
+  if (!course) return;
+
+  const cookieStore = await cookies();
+  cookieStore.set(ACTIVE_COURSE_COOKIE, courseId, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+
+  revalidatePath("/professor", "layout");
+}
 
 export async function fetchGoogleCourses(): Promise<
   { courses?: { id: string; name: string }[]; error?: string }
@@ -232,4 +262,23 @@ export async function sendAutoTip(_prev: ActionState, _formData: FormData): Prom
   }
 
   return { success: "Dica automática (teste) enviada para toda a turma e publicada no Google Classroom!" };
+}
+
+/** Dispara a dica automática real (por construto, um por aluno) para a turma
+ * ativa do professor, agora — a mesma lógica que o cron semanal roda pra
+ * todas as turmas (ver app/api/cron/auto-tip/route.ts e lib/autoTip.ts). */
+export async function runAutoTipNow(_prev: ActionState, _formData: FormData): Promise<ActionState> {
+  const { profile } = await requireProfile("professor");
+  const course = await getActiveCourse(profile.id);
+  if (!course) return { error: "Sincronize uma turma antes de rodar a dica automática." };
+
+  const result = await runAutoTipForCourse(course.id);
+
+  if (result.sent.length === 0 && result.errors.length > 0) {
+    return { error: result.errors.join(" | ") };
+  }
+
+  const parts = [`${result.sent.length} aluno(s) receberam dica automática`, `${result.skipped} sem necessidade/pausa`];
+  if (result.errors.length > 0) parts.push(`avisos: ${result.errors.join(" | ")}`);
+  return { success: parts.join(" · ") + "." };
 }

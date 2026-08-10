@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "NeoAVA-ARA | Autorregulação da Aprendizagem",
-  description: "Sistema de Autorregulação da Aprendizagem (MSLQ) integrado ao Google Classroom",
+  description: "Sistema de Autorregulação da Aprendizagem integrado ao Google Classroom",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

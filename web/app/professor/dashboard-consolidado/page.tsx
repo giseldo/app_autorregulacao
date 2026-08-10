@@ -108,12 +108,17 @@ export default async function DashboardConsolidadoPage() {
 
   return (
     <>
-      <div className="page-header">
-        <h2>Dashboard Consolidado 🧭</h2>
-        <p>
-          Turma: <strong>{course.name}</strong> — questionário de autorregulação (pré/pós) e recomendações enviadas,
-          em um único painel.
-        </p>
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2>Dashboard Consolidado 🧭</h2>
+          <p>
+            Turma: <strong>{course.name}</strong> — questionário de autorregulação (pré/pós) e recomendações
+            enviadas, em um único painel.
+          </p>
+        </div>
+        <a href={`/api/professor/export?course_id=${course.id}`} className="btn btn-secondary btn-sm">
+          ⬇️ Exportar XLSX
+        </a>
       </div>
 
       <div className="grid-4 mb-4">
