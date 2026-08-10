@@ -7,6 +7,12 @@ import { createServerClient } from "@supabase/ssr";
 // não está logado.
 const PUBLIC_PATHS = ["/login", "/auth", "/sobre"];
 
+// Rotas de API cuidam da própria autenticação (requireProfile devolvendo 401
+// em JSON, ou CRON_SECRET no header Authorization para /api/cron/*) — não dá
+// pra redirecionar pra /login (uma página HTML) quando quem chama é o cron
+// da Vercel ou um fetch de API sem cookie de sessão de navegador.
+const API_PREFIX = "/api";
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -36,7 +42,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isPublic = path === "/" || PUBLIC_PATHS.some((p) => path.startsWith(p));
+  const isPublic = path === "/" || path.startsWith(API_PREFIX) || PUBLIC_PATHS.some((p) => path.startsWith(p));
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
